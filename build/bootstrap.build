@@ -1,0 +1,7 @@
+project = libstud-json
+
+using version
+using config
+using test
+using install
+using dist
