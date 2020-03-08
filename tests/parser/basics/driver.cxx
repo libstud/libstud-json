@@ -24,6 +24,7 @@ number (const string& m, json::parser& p)
   if (m == "l") return to_string (p.value<long double> ());
 
   assert (false);
+  return "";
 }
 
 int main (int argc, const char* argv[])
@@ -86,7 +87,7 @@ int main (int argc, const char* argv[])
     cerr << e.name << ':' << e.line << ':' << e.column << ": error: "
          << e.what () << endl;
   }
-  catch (const istream::failure& e)
+  catch (const istream::failure&)
   {
     cerr << "error: unable to read from stdin" << endl;
   }
