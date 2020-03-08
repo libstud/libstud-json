@@ -5,9 +5,17 @@
 #include <cstddef>   // size_t
 #include <cstdint>   // uint64_t
 #include <utility>   // move()
-#include <optional>
 #include <exception> // exception_ptr
 #include <stdexcept> // invalid_argument
+
+#if defined(__APPLE__)         && \
+    defined(_LIBCPP_VERSION)   && \
+    !__has_include(<optional>) && \
+     __has_include(<experimental/optional>)
+#  include <experimental/optional>
+#else
+#  include <optional>
+#endif
 
 #include <libstud/json/pdjson.h> // Implementation details.
 
