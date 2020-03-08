@@ -1,3 +1,0 @@
-import libs = libstud-json%lib{stud-json}
-
-exe{driver}: {hxx ixx txx cxx}{**} $libs testscript{**}

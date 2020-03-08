@@ -1,6 +1,9 @@
 This file contains information about the libstud authors for copyright
 purposes.
 
+Note that the libstud/json/pdjson.* files are from the pdjson project that
+released them into the public domain.
+
 The copyright for the code is held by the contributors of the code. The
 revision history in the version control system is the primary source of
 authorship information for copyright purposes. Contributors that have

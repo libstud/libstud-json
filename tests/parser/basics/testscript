@@ -1,0 +1,120 @@
+: basic
+:
+$* <<EOI >>EOO
+{
+  "string":  "str",
+  "number":  123,
+  "boolean": true,
+  "null":    null,
+  "array":   ["str", 123, false, null],
+  "subobj":  {"foo": "bar"}
+}
+EOI
+{
+  string
+  "str"
+  number
+  123
+  boolean
+  true
+  null
+  NULL
+  array
+  [
+    "str"
+    123
+    false
+    NULL
+  ]
+  subobj
+  {
+    foo
+    "bar"
+  }
+}
+EOO
+
+: empty
+:
+$* 2>>EOE != 0
+<stdin>:1:0: error: unexpected end of text
+EOE
+
+: fail-exception
+:
+$* --fail-exc <'{' >'{' 2>>EOE != 0
+error: unable to read from stdin
+EOE
+
+: fail-bit
+:
+$* --fail-bit <'{' >'{' 2>>EOE != 0
+<stdin>:0:0: error: unable to read text
+EOE
+
+: value-sint
+:
+{
+  : max
+  :
+  $* i <'2147483647' >'2147483647'
+
+  : min
+  :
+  $* i <'-2147483648' >'-2147483648'
+
+  : fail-min
+  :
+  $* i <'-2147483649' 2>>EOE != 0
+  <stdin>:1:0: error: invalid signed integer value: '-2147483649'
+  EOE
+
+  : fail-max
+  :
+  $* i <'2147483648' 2>>EOE != 0
+  <stdin>:1:0: error: invalid signed integer value: '2147483648'
+  EOE
+}
+
+: value-uint
+:
+{
+  : max
+  :
+  $* u <'4294967295' >'4294967295'
+
+  : fail-max
+  :
+  $* u <'4294967296' 2>>EOE != 0
+  <stdin>:1:0: error: invalid unsigned integer value: '4294967296'
+  EOE
+}
+
+# Testing floating point values is a pain. So we only check the success cases
+# trusting the strto*() functions to detect range issues as expected.
+#
+: value-float
+:
+$* f <'0.123' >~'/0.123[0-9]*/'
+
+: value-double
+:
+$* d <'0.1234' >~'/0.1234[0-9]*/'
+
+: value-long-double
+:
+$* l <'0.12345' >~'/0.12345[0-9]*/'
+
+# Test a bunch of corner cases.
+#
+: leading-zero
+:
+$* <'01' >'0' 2>>EOE != 0
+<stdin>:1:0: error: expected end of text instead of byte '1'
+EOE
+
+: wrong-letter
+:
+$* <'trux' 2>>EOE != 0
+<stdin>:1:0: error: expected 'e' instead of byte 'x'
+EOE

@@ -1,5 +1,12 @@
 lib{stud-json}: {hxx ixx txx cxx}{** -version} hxx{version}
 
+# The pdjson.c file is included into parser.cxx so exclude it from the
+# compilation. Note that pdjson.h must be installed since it is included in
+# parser.hxx.
+#
+lib{stud-json}: c{pdjson}: include = adhoc
+lib{stud-json}: h{pdjson}
+
 # Include the generated version header into the distribution (so that we don't
 # pick up an installed one) and don't remove it when cleaning in src (so that
 # clean results in a state identical to distributed).
@@ -40,7 +47,7 @@ else
 # Install into the libstud/json/ subdirectory of, say, /usr/include/
 # recreating subdirectories.
 #
-{hxx ixx txx}{*}:
+{h hxx ixx txx}{*}:
 {
   install         = include/libstud/json/
   install.subdirs = true

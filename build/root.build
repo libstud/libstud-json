@@ -7,11 +7,13 @@ ixx{*}: extension = ixx
 txx{*}: extension = txx
 cxx{*}: extension = cxx
 
+using c
+
 if ($cxx.target.system == 'win32-msvc')
-  cxx.poptions += -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS
+  cc.poptions += -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS
 
 if ($cxx.class == 'msvc')
-  cxx.coptions += /wd4251 /wd4275 /wd4800
+  cc.coptions += /wd4251 /wd4275 /wd4800
 
 # The test target for cross-testing (running tests under Wine, etc).
 #
