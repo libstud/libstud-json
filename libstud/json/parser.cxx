@@ -60,7 +60,9 @@ namespace stud
     //
     parser::
     parser (istream& is, const char* n)
-        : input_name (n), stream_ {&is, nullptr}, raw_s_ (nullptr)
+        : input_name (n),
+          stream_ {&is, nullptr},
+          raw_s_ (nullptr), raw_n_ (0)
     {
       json_open_user (impl_, &stream_get, &stream_peek, &stream_);
       json_set_streaming (impl_, false);
@@ -68,7 +70,9 @@ namespace stud
 
     parser::
     parser (const void* t, size_t s, const char* n)
-        : input_name (n), stream_ {nullptr, nullptr}, raw_s_ (nullptr)
+        : input_name (n),
+          stream_ {nullptr, nullptr},
+          raw_s_ (nullptr), raw_n_ (0)
     {
       json_open_buffer (impl_, t, s);
       json_set_streaming (impl_, false);
@@ -80,6 +84,8 @@ namespace stud
       event r (event::null);
 
       raw_s_ = nullptr;
+      raw_n_ = 0;
+
       json_type e (json_next (impl_));
 
       // First check for a pending input/output error.

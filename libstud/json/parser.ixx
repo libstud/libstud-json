@@ -1,6 +1,7 @@
 #include <cerrno>
 #include <limits>      // numeric_limits
 #include <utility>     // move()
+#include <cassert>
 #include <cstdlib>     // strto*()
 #include <type_traits> // enable_if, is_*
 
@@ -43,6 +44,7 @@ namespace stud
     inline const std::string& parser::
     name ()
     {
+      assert (raw_s_ != nullptr); // @@ TODO: check not value.
       name_.assign (raw_s_, raw_n_);
       return name_;
     }
@@ -50,6 +52,7 @@ namespace stud
     inline std::string& parser::
     value ()
     {
+      assert (raw_s_ != nullptr); // @@ TODO: check not name.
       value_.assign (raw_s_, raw_n_);
       return value_;
     }
@@ -142,6 +145,7 @@ namespace stud
     inline T parser::
     value ()
     {
+      assert (raw_s_ != nullptr); // @@ TODO: check not name.
       return parse_value<T> (raw_s_, raw_n_, *this);
     }
   }

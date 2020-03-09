@@ -4,7 +4,7 @@
 #include <string>
 #include <cstddef>   // size_t
 #include <cstdint>   // uint64_t
-#include <utility>   // move()
+#include <utility>   // pair
 #include <optional>
 #include <exception> // exception_ptr
 #include <stdexcept> // invalid_argument
@@ -41,8 +41,6 @@ namespace stud
 
     // Parsing event.
     //
-    // @@ TODO: better name?
-    //
     enum class event
     {
       begin_object, end_object,
@@ -68,7 +66,7 @@ namespace stud
       // that the stream and name are kept as references so both must outlive
       // the parser instance.
       //
-      // If stream exceptions are enabled then std::ios_base::failure
+      // If stream exceptions are enabled then the std::ios_base::failure
       // exception is used to report input/output errors (badbit and failbit).
       // Otherwise, those are reported as the invalid_json exception.
       //
@@ -112,13 +110,16 @@ namespace stud
       iterator begin () {return iterator (this, next ());}
       iterator end ()   {return iterator (nullptr, std::nullopt);}
 
+      // Event data.
+      //
+
       // Return the object member name.
       //
       const std::string&
       name ();
 
       // Any value (string, number, boolean, and null) can be retrieved as a
-      // string.
+      // string. Calling this function after any non-value events is illegal.
       //
       // Note that the value is returned as a non-const string reference and
       // you are allowed to move the value out of it. However, this should not
@@ -135,6 +136,13 @@ namespace stud
       template <typename T>
       T
       value ();
+
+      // Return the value or object member name in the raw form. Calling this
+      // function on non-value/name events is legal in which case NULL is
+      // returned.
+      //
+      std::pair<const char*, std::size_t>
+      data () const {return std::make_pair (raw_s_, raw_n_);}
 
       // Implementation details.
       //
@@ -182,7 +190,7 @@ namespace stud
       // Cached raw value.
       //
       const char* raw_s_;
-      size_t      raw_n_;
+      std::size_t raw_n_;
     };
   }
 }
