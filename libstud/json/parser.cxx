@@ -81,12 +81,44 @@ namespace stud
     optional<event> parser::
     next ()
     {
-      event r (event::null);
+      name_p_ = value_p_ = line_p_ = false;
 
+      // Note that for now we don't worry about the state of the parser if
+      // next_impl() throws assuming it is not going to be reused.
+      //
+      if (peeked_)
+      {
+        parsed_ = peeked_;
+        peeked_ = nullopt;
+      }
+      else
+        parsed_ = next_impl ();
+
+      return translate (*parsed_);
+    }
+
+    optional<event> parser::
+    peek ()
+    {
+      if (!peeked_)
+      {
+        if (parsed_)
+        {
+          cache_parsed_data ();
+          cache_parsed_line ();
+        }
+        peeked_ = next_impl ();
+      }
+      return translate (*peeked_);
+    }
+
+    json_type parser::
+    next_impl ()
+    {
       raw_s_ = nullptr;
       raw_n_ = 0;
 
-      json_type e (json_next (impl_));
+      const json_type e (json_next (impl_));
 
       // First check for a pending input/output error.
       //
@@ -101,36 +133,19 @@ namespace stud
 
       switch (e)
       {
-      case JSON_DONE:        return nullopt;
-      case JSON_ERROR:       goto fail_json;
-      case JSON_OBJECT:      return event::begin_object;
-      case JSON_OBJECT_END:  return event::end_object;
-      case JSON_ARRAY:       return event::begin_array;
-      case JSON_ARRAY_END:   return event::end_array;
+      case JSON_ERROR: goto fail_json;
       case JSON_STRING:
-        {
-          // This can be a value or, inside an object, a name from the
-          // name/value pair.
-          //
-          size_t n;
-          r  = json_get_context (impl_, &n) == JSON_OBJECT && n % 2 == 1
-            ? event::name
-            : event::string;
-          break;
-        }
-      case JSON_NUMBER:                              r = event::number;  break;
-      case JSON_TRUE:  raw_s_ = "true",  raw_n_ = 4; r = event::boolean; break;
-      case JSON_FALSE: raw_s_ = "false", raw_n_ = 5; r = event::boolean; break;
-      case JSON_NULL:  raw_s_ = "null",  raw_n_ = 4; r = event::null;    break;
-      }
-
-      if (e == JSON_STRING || e == JSON_NUMBER)
-      {
+      case JSON_NUMBER:
         raw_s_ = json_get_string (impl_, &raw_n_);
         raw_n_--; // Includes terminating `\0`.
+        break;
+      case JSON_TRUE:  raw_s_ = "true";  raw_n_ = 4; break;
+      case JSON_FALSE: raw_s_ = "false"; raw_n_ = 5; break;
+      case JSON_NULL:  raw_s_ = "null";  raw_n_ = 4; break;
+      default: break;
       }
 
-      return r;
+      return e;
 
     fail_json:
       throw invalid_json (input_name != nullptr ? input_name : "",
@@ -148,20 +163,96 @@ namespace stud
       rethrow_exception (move (stream_.exception));
     }
 
+    std::optional<event> parser::
+    translate (json_type e) const noexcept
+    {
+      switch (e)
+      {
+      case JSON_DONE: return std::nullopt;
+      case JSON_OBJECT: return event::begin_object;
+      case JSON_OBJECT_END: return event::end_object;
+      case JSON_ARRAY: return event::begin_array;
+      case JSON_ARRAY_END: return event::end_array;
+      case JSON_STRING:
+        {
+          // This can be a value or, inside an object, a name from the
+          // name/value pair.
+          //
+          size_t n;
+          return json_get_context (const_cast<json_stream*> (impl_), &n) ==
+                             JSON_OBJECT &&
+                         n % 2 == 1
+                     ? event::name
+                     : event::string;
+        }
+      case JSON_NUMBER: return event::number;
+      case JSON_TRUE: return event::boolean;
+      case JSON_FALSE: return event::boolean;
+      case JSON_NULL: return event::null;
+      case JSON_ERROR: assert (false); // Should've been handled by caller.
+      }
+
+      return nullopt; // Should never reach.
+    }
+
+    void parser::
+    cache_parsed_data ()
+    {
+      name_p_ = value_p_ = false;
+      if (const std::optional<event> e = translate (*parsed_))
+      {
+        if (e == event::name)
+        {
+          name_.assign (raw_s_, raw_n_);
+          name_p_ = true;
+        }
+        else if (value_event (e))
+        {
+          value_.assign (raw_s_, raw_n_);
+          value_p_ = true;
+        }
+      }
+    }
+
+    void parser::
+    cache_parsed_line () noexcept
+    {
+      line_ = static_cast<uint64_t> (json_get_lineno (impl_));
+      line_p_ = true;
+    }
+
+    bool parser::
+    value_event (std::optional<event> e) noexcept
+    {
+      if (!e)
+        return false;
+
+      switch (*e)
+      {
+      case event::string:
+      case event::number:
+      case event::boolean:
+      case event::null:
+        return true;
+      default:
+        return false;
+      }
+    }
+
     [[noreturn]] void parser::
-    throw_invalid_value (const char* type)
+    throw_invalid_value (const char* type, const char* v, size_t n) const
     {
       string d (string ("invalid ") + type + " value: '");
-      d.append (raw_s_, raw_n_);
+      d.append (v, n);
       d += '\'';
 
       throw invalid_json (input_name != nullptr ? input_name : "",
-                          static_cast<uint64_t> (json_get_lineno (impl_)),
+                          line (),
                           0 /* column */,
                           move (d));
     }
-  }
-}
+  } // namespace json
+} // namespace stud
 
 // Include the implementation into our translation unit (instead of compiling
 // it separately) to (hopefully) get function inlining without LTO.

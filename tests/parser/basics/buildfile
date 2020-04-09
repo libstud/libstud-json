@@ -1,3 +1,23 @@
 import libs = libstud-json%lib{stud-json}
 
-exe{driver}: {hxx cxx}{*} $libs testscript
+./: exe{driver}: {hxx cxx}{*} $libs
+
+# Run the tests twice, once as is and another time with a pre-peek of every
+# token (as an extra test for the peek logic). If/when we have support for a
+# for-loop in Testscript we can handle this cleanly there. For now we use this
+# alias trick (or hack, if you wish).
+#
+exe{driver}: test = false
+
+./: alias{default peek}: exe{driver} testscript
+
+alias{default}:
+{
+  test = exe{driver}
+}
+
+alias{peek}:
+{
+  test = exe{driver}
+  test.options += --peek
+}

@@ -84,13 +84,25 @@ namespace stud
       parser (const void* text, std::size_t size, const char* name);
       parser (const void*, std::size_t, std::string&&) = delete;
 
+      // Similar to the above but parse a string.
+      //
+      parser (const std::string& text, const std::string& name);
+      parser (const std::string& text, const char* name);
+      parser (const std::string&, std::string&&) = delete;
+
+      // Similar to the above but parse a C-string.
+      //
+      parser (const char* text, const std::string& name);
+      parser (const char* text, const char* name);
+      parser (const char*, std::string&&) = delete;
+
       parser (parser&&) = delete;
       parser (const parser&) = delete;
 
       parser& operator= (parser&&) = delete;
       parser& operator= (const parser&) = delete;
 
-      // Parsing.
+      // Return the next event.
       //
       //     while (optional<event> e = p.next ())
       //
@@ -109,6 +121,19 @@ namespace stud
 
       iterator begin () {return iterator (this, next ());}
       iterator end ()   {return iterator (nullptr, std::nullopt);}
+
+      // Return the next event without considering it parsed. In other words,
+      // after this call, any subsequent calls to peek() and the next call to
+      // next() (if any) will all return the same event.
+      //
+      // Note that the name, value, and line corresponding to the peeked event
+      // are not accessible with name(), value() and line(); these functions
+      // will still return values corresponding to the most recent call to
+      // next(). The peeked values, however, can be accessed in the raw form
+      // using data().
+      //
+      std::optional<event>
+      peek ();
 
       // Event data.
       //
@@ -135,11 +160,19 @@ namespace stud
       //
       template <typename T>
       T
-      value ();
+      value () const;
 
-      // Return the value or object member name in the raw form. Calling this
-      // function on non-value/name events is legal in which case NULL is
-      // returned.
+      // Return the line number corresponding to the most recently parsed
+      // event.
+      //
+      std::uint64_t
+      line () const;
+
+      // Return the value or object member name in the raw form.
+      //
+      // Calling this function on non-value/name events is legal in which case
+      // NULL is returned. Note also that the returned data corresponds to the
+      // most recent event, whether peeked or parsed.
       //
       std::pair<const char*, std::size_t>
       data () const {return std::make_pair (raw_s_, raw_n_);}
@@ -175,15 +208,52 @@ namespace stud
       };
 
       [[noreturn]] void
-      throw_invalid_value (const char* type);
+      throw_invalid_value (const char* type, const char*, std::size_t) const;
 
       ~parser ();
 
     private:
+      // Functionality shared by next() and peek().
+      //
+      json_type
+      next_impl ();
+
+      // Translate the event produced by the most recent call to next_impl().
+      //
+      // Note that the underlying parser state determines whether name or
+      // value is returned when translating JSON_STRING.
+      //
+      std::optional<event>
+      translate (json_type) const noexcept;
+
+      // Cache state (name/value) produced by the most recent call to
+      // next_impl().
+      //
+      void
+      cache_parsed_data ();
+
+      // Cache the line number as determined by the most recent call to
+      // next_impl().
+      void
+      cache_parsed_line () noexcept;
+
+      // Return true if this is a value event (string, number, boolean, or
+      // null).
+      //
+      static bool
+      value_event (std::optional<event>) noexcept;
+
       stream stream_;
 
-      std::string name_;
-      std::string value_;
+      // The *_p_ members indicate whether the value is present (cached).
+      // Note: not using optional not to reallocate the string's buffer.
+      //
+      std::string name_;   bool name_p_  = false;
+      std::string value_;  bool value_p_ = false;
+      std::uint64_t line_; bool line_p_  = false;
+
+      std::optional<json_type> parsed_; // Current parsed event if any.
+      std::optional<json_type> peeked_; // Current peeked event if any.
 
       ::json_stream impl_[1];
 

@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstdlib>     // strto*()
 #include <type_traits> // enable_if, is_*
+#include <cstring>     // strlen()
 
 namespace stud
 {
@@ -41,20 +42,65 @@ namespace stud
     {
     }
 
+    inline parser::
+    parser (const std::string& text, const std::string& name)
+        : parser (text.data (), text.size (), name.c_str ())
+    {
+    }
+
+    inline parser::
+    parser (const std::string& text, const char* name)
+        : parser (text.data (), text.size (), name)
+    {
+    }
+
+    inline parser::
+    parser (const char* text, const std::string& name)
+        : parser (text, std::strlen (text), name.c_str ())
+    {
+    }
+
+    inline parser::
+    parser (const char* text, const char* name)
+        : parser (text, std::strlen (text), name)
+    {
+    }
+
     inline const std::string& parser::
     name ()
     {
-      assert (raw_s_ != nullptr); // @@ TODO: check not value.
-      name_.assign (raw_s_, raw_n_);
+      if (!name_p_)
+      {
+        assert (parsed_ && !peeked_ && !value_p_);
+        cache_parsed_data ();
+        assert (name_p_);
+      }
       return name_;
     }
 
     inline std::string& parser::
     value ()
     {
-      assert (raw_s_ != nullptr); // @@ TODO: check not name.
-      value_.assign (raw_s_, raw_n_);
+      if (!value_p_)
+      {
+        assert (parsed_ && !peeked_ && !name_p_);
+        cache_parsed_data ();
+        assert (value_p_);
+      }
       return value_;
+    }
+
+    inline std::uint64_t parser::
+    line () const
+    {
+      if (!line_p_)
+      {
+        assert (parsed_ && !peeked_);
+        return static_cast<uint64_t> (
+            json_get_lineno (const_cast<json_stream*> (impl_)));
+      }
+
+      return line_;
     }
 
     // Note: one day we will be able to use C++17 from_chars() which was made
@@ -62,7 +108,7 @@ namespace stud
     //
     template <typename T>
     inline typename std::enable_if<std::is_same<T, bool>::value, T>::type
-    parse_value (const char* b, size_t, parser&)
+    parse_value (const char* b, size_t, const parser&)
     {
       return *b == 't';
     }
@@ -72,7 +118,7 @@ namespace stud
       std::is_integral<T>::value &&
       std::is_signed<T>::value &&
       !std::is_same<T, bool>::value, T>::type
-    parse_value (const char* b, size_t n, parser& p)
+    parse_value (const char* b, size_t n, const parser& p)
     {
       char* e (nullptr);
       std::int64_t v (strtoll (b, &e, 10)); // Can't throw.
@@ -80,7 +126,7 @@ namespace stud
       if (e == b || e != b + n || errno == ERANGE ||
           v < std::numeric_limits<T>::min () ||
           v > std::numeric_limits<T>::max ())
-        p.throw_invalid_value ("signed integer");
+        p.throw_invalid_value ("signed integer", b, n);
 
       return static_cast<T> (v);
     }
@@ -90,63 +136,68 @@ namespace stud
       std::is_integral<T>::value &&
       std::is_unsigned<T>::value &&
       !std::is_same<T, bool>::value, T>::type
-    parse_value (const char* b, size_t n, parser& p)
+    parse_value (const char* b, size_t n, const parser& p)
     {
       char* e (nullptr);
       std::uint64_t v (strtoull (b, &e, 10)); // Can't throw.
 
       if (e == b || e != b + n || errno == ERANGE ||
           v > std::numeric_limits<T>::max ())
-        p.throw_invalid_value ("unsigned integer");
+        p.throw_invalid_value ("unsigned integer", b, n);
 
       return static_cast<T> (v);
     }
 
     template <typename T>
     inline typename std::enable_if<std::is_same<T, float>::value, T>::type
-    parse_value (const char* b, size_t n, parser& p)
+    parse_value (const char* b, size_t n, const parser& p)
     {
       char* e (nullptr);
       T r (std::strtof (b, &e));
 
       if (e == b || e != b + n || errno == ERANGE)
-        p.throw_invalid_value ("float");
+        p.throw_invalid_value ("float", b, n);
 
       return r;
     }
 
     template <typename T>
     inline typename std::enable_if<std::is_same<T, double>::value, T>::type
-    parse_value (const char* b, size_t n, parser& p)
+    parse_value (const char* b, size_t n, const parser& p)
     {
       char* e (nullptr);
       T r (std::strtod (b, &e));
 
       if (e == b || e != b + n || errno == ERANGE)
-        p.throw_invalid_value ("double");
+        p.throw_invalid_value ("double", b, n);
 
       return r;
     }
 
     template <typename T>
     inline typename std::enable_if<std::is_same<T, long double>::value, T>::type
-    parse_value (const char* b, size_t n, parser& p)
+    parse_value (const char* b, size_t n, const parser& p)
     {
       char* e (nullptr);
       T r (std::strtold (b, &e));
 
       if (e == b || e != b + n || errno == ERANGE)
-        p.throw_invalid_value ("long double");
+        p.throw_invalid_value ("long double", b, n);
 
       return r;
     }
 
     template <typename T>
     inline T parser::
-    value ()
+    value () const
     {
-      assert (raw_s_ != nullptr); // @@ TODO: check not name.
-      return parse_value<T> (raw_s_, raw_n_, *this);
+      if (!value_p_)
+      {
+        assert (parsed_ && !peeked_ && value_event (translate (*parsed_)));
+        return parse_value<T> (raw_s_, raw_n_, *this);
+      }
+
+      return parse_value<T> (value_.data (), value_.size (), *this);
     }
   }
 }

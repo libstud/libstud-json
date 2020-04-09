@@ -1,5 +1,6 @@
-// Usage: argv[0] --fail-exc|--fail-bit|[<mode>]
+// Usage: argv[0] [--peek] --fail-exc|--fail-bit|[<mode>]
 //
+// --peek      -- pre-peek every token before parsing (must come first)
 // --fail-exc  -- fail due to istream exception
 // --fail-bit  -- fail due to istream badbit
 // <mode>      -- numeric value parsing mode: i|u|f|d|l|
@@ -31,14 +32,21 @@ int main (int argc, const char* argv[])
 {
   bool fail_exc (false);
   bool fail_bit (false);
+  bool peek (false);
   string nm;
-  if (argc > 1)
   {
-    string o (argv[1]);
+    int i (1);
+    string o;
 
-    if      (o == "--fail-exc") fail_exc = true;
-    else if (o == "--fail-bit") fail_bit = true;
-    else nm = move (o);
+    if (argc > i && (o = argv[i]) == "--peek") {peek = true; ++i;}
+
+    if (argc > i)
+    {
+      o = argv[i];
+      if      (o == "--fail-exc") fail_exc = true;
+      else if (o == "--fail-bit") fail_bit = true;
+      else nm = move (o);
+    }
   }
 
   try
@@ -55,6 +63,9 @@ int main (int argc, const char* argv[])
 
     parser p (cin, "<stdin>");
     size_t i (0); // Indentation.
+
+    if (peek)
+      p.peek();
 
     for (event e: p)
     {
@@ -78,6 +89,9 @@ int main (int argc, const char* argv[])
 
       if (fail_bit)
         cin.setstate (istream::badbit);
+
+      if (peek)
+        p.peek();
     }
 
     return 0;
