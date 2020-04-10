@@ -90,19 +90,6 @@ namespace stud
       return value_;
     }
 
-    inline std::uint64_t parser::
-    line () const
-    {
-      if (!line_p_)
-      {
-        assert (parsed_ && !peeked_);
-        return static_cast<uint64_t> (
-            json_get_lineno (const_cast<json_stream*> (impl_)));
-      }
-
-      return line_;
-    }
-
     // Note: one day we will be able to use C++17 from_chars() which was made
     // exactly for this.
     //

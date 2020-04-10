@@ -112,6 +112,19 @@ namespace stud
       return translate (*peeked_);
     }
 
+    std::uint64_t parser::
+    line () const
+    {
+      if (!line_p_)
+      {
+        assert (parsed_ && !peeked_);
+        return static_cast<uint64_t> (
+            json_get_lineno (const_cast<json_stream*> (impl_)));
+      }
+
+      return line_;
+    }
+
     json_type parser::
     next_impl ()
     {
