@@ -10,28 +10,28 @@ $* <<EOI >>EOO
   "subobj":  {"foo": "bar"}
 }
 EOI
-{
-  string
-  "str"
-  number
-  123
-  boolean
-  true
-  null
-  NULL
-  array
-  [
-    "str"
-    123
-    false
-    NULL
-  ]
-  subobj
-  {
-    foo
-    "bar"
-  }
-}
+  1: {
+  2:   string
+  2:   "str"
+  3:   number
+  3:   123
+  4:   boolean
+  4:   true
+  5:   null
+  5:   NULL
+  6:   array
+  6:   [
+  6:     "str"
+  6:     123
+  6:     false
+  6:     NULL
+  6:   ]
+  7:   subobj
+  7:   {
+  7:     foo
+  7:     "bar"
+  7:   }
+  8: }
 EOO
 
 : empty
@@ -42,13 +42,13 @@ EOE
 
 : fail-exception
 :
-$* --fail-exc <'{' >'{' 2>>EOE != 0
+$* --fail-exc <'{' >'  1: {' 2>>EOE != 0
 error: unable to read from stdin
 EOE
 
 : fail-bit
 :
-$* --fail-bit <'{' >'{' 2>>EOE != 0
+$* --fail-bit <'{' >'  1: {' 2>>EOE != 0
 <stdin>:0:0: error: unable to read text
 EOE
 
@@ -57,11 +57,11 @@ EOE
 {
   : max
   :
-  $* i <'2147483647' >'2147483647'
+  $* i <'2147483647' >'  1: 2147483647'
 
   : min
   :
-  $* i <'-2147483648' >'-2147483648'
+  $* i <'-2147483648' >'  1: -2147483648'
 
   : fail-min
   :
@@ -81,7 +81,7 @@ EOE
 {
   : max
   :
-  $* u <'4294967295' >'4294967295'
+  $* u <'4294967295' >'  1: 4294967295'
 
   : fail-max
   :
@@ -95,21 +95,21 @@ EOE
 #
 : value-float
 :
-$* f <'0.123' >~'/0.123[0-9]*/'
+$* f <'0.123' >~'/  1: 0.123[0-9]*/'
 
 : value-double
 :
-$* d <'0.1234' >~'/0.1234[0-9]*/'
+$* d <'0.1234' >~'/  1: 0.1234[0-9]*/'
 
 : value-long-double
 :
-$* l <'0.12345' >~'/0.12345[0-9]*/'
+$* l <'0.12345' >~'/  1: 0.12345[0-9]*/'
 
 # Test a bunch of corner cases.
 #
 : leading-zero
 :
-$* <'01' >'0' 2>>EOE != 0
+$* <'01' >'  1: 0' 2>>EOE != 0
 <stdin>:1:0: error: expected end of text instead of byte '1'
 EOE
 

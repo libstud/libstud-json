@@ -8,6 +8,7 @@
 #include <cassert>
 #include <cstdint>
 #include <iostream>
+#include <iomanip>
 
 #include <libstud/json/parser.hxx>
 
@@ -64,6 +65,8 @@ int main (int argc, const char* argv[])
     parser p (cin, "<stdin>");
     size_t i (0); // Indentation.
 
+    cout << right << setfill (' '); // Line number formatting.
+
     if (peek)
       p.peek();
 
@@ -85,7 +88,7 @@ int main (int argc, const char* argv[])
       case event::null:         s = "NULL";                              break;
       }
 
-      cout << string (j, ' ') << s << '\n';
+      cout << setw (3) << p.line () << ": " << string (j, ' ') << s << '\n';
 
       if (fail_bit)
         cin.setstate (istream::badbit);
