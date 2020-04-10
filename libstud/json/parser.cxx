@@ -21,16 +21,24 @@ namespace stud
     {
       auto& s (*static_cast<parser::stream*> (x));
 
-      try
+      // In the multi-value mode reading of whitespaces/separators is split
+      // between our code and pdjson's. As a result, these functions may end
+      // up being called more than once after EOF is reached. Which is
+      // something iostream does not handle gracefully.
+      //
+      if (!s.is->eof ())
       {
-        // We first peek not to trip failbit on EOF.
-        //
-        if (s.is->peek () != istream::traits_type::eof ())
-          return static_cast<char> (s.is->get ());
-      }
-      catch (...)
-      {
-        s.exception = current_exception ();
+        try
+        {
+          // We first peek not to trip failbit on EOF.
+          //
+          if (s.is->peek () != istream::traits_type::eof ())
+            return static_cast<char> (s.is->get ());
+        }
+        catch (...)
+        {
+          s.exception = current_exception ();
+        }
       }
 
       return EOF;
@@ -41,15 +49,18 @@ namespace stud
     {
       auto& s (*static_cast<parser::stream*> (x));
 
-      try
+      if (!s.is->eof ())
       {
-        auto c (s.is->peek ());
-        if (c != istream::traits_type::eof ())
-          return static_cast<char> (c);
-      }
-      catch (...)
-      {
-        s.exception = current_exception ();
+        try
+        {
+          auto c (s.is->peek ());
+          if (c != istream::traits_type::eof ())
+            return static_cast<char> (c);
+        }
+        catch (...)
+        {
+          s.exception = current_exception ();
+        }
       }
 
       return EOF;
@@ -59,23 +70,29 @@ namespace stud
     // might throw after opening the stream).
     //
     parser::
-    parser (istream& is, const char* n)
+    parser (istream& is, const char* n, bool mv, const char* sep)
         : input_name (n),
           stream_ {&is, nullptr},
-          raw_s_ (nullptr), raw_n_ (0)
+          multi_value_ (mv),
+          separators_ (sep),
+          raw_s_ (nullptr),
+          raw_n_ (0)
     {
       json_open_user (impl_, &stream_get, &stream_peek, &stream_);
-      json_set_streaming (impl_, false);
+      json_set_streaming (impl_, multi_value_);
     }
 
     parser::
-    parser (const void* t, size_t s, const char* n)
+    parser (const void* t, size_t s, const char* n, bool mv, const char* sep)
         : input_name (n),
           stream_ {nullptr, nullptr},
-          raw_s_ (nullptr), raw_n_ (0)
+          multi_value_ (mv),
+          separators_ (sep),
+          raw_s_ (nullptr),
+          raw_n_ (0)
     {
       json_open_buffer (impl_, t, s);
-      json_set_streaming (impl_, false);
+      json_set_streaming (impl_, multi_value_);
     }
 
     optional<event> parser::
@@ -130,22 +147,117 @@ namespace stud
     {
       raw_s_ = nullptr;
       raw_n_ = 0;
+      json_type e;
 
-      const json_type e (json_next (impl_));
+      // Read characters between values skipping required separators and JSON
+      // whitespaces. Return whether a required separator was encountered as
+      // well as the first non-separator/whitespace character (which, if EOF,
+      // should trigger a check for input/output errors.
+      //
+      auto skip_separators = [this] () -> pair<bool, int>
+      {
+        bool r (separators_ == nullptr);
+
+        int c;
+        for (; (c = json_source_peek (impl_)) != EOF; json_source_get (impl_))
+        {
+          // User separator.
+          //
+          if (separators_ != nullptr && *separators_ != '\0')
+          {
+            if (strchr (separators_, c) != nullptr)
+            {
+              r = true;
+              continue;
+            }
+          }
+
+          // JSON separator.
+          //
+          if (json_isspace (c))
+          {
+            if (separators_ != nullptr && *separators_ == '\0')
+              r = true;
+
+            continue;
+          }
+
+          break;
+        }
+
+        return make_pair (r, c);
+      };
+
+      // In the multi-value mode skip any instances of required separators
+      // (and any other JSON whitespace) preceding the first JSON value.
+      //
+      if (multi_value_ && !parsed_ && !peeked_)
+      {
+        if (skip_separators ().second == EOF && stream_.is != nullptr)
+        {
+          if (stream_.exception != nullptr) goto fail_rethrow;
+          if (stream_.is->fail ())          goto fail_stream;
+        }
+      }
+
+      e = json_next (impl_);
 
       // First check for a pending input/output error.
       //
       if (stream_.is != nullptr)
       {
-        if (stream_.exception != nullptr)
-          goto fail_rethrow;
-
-        if (stream_.is->fail ())
-          goto fail_stream;
+        if (stream_.exception != nullptr) goto fail_rethrow;
+        if (stream_.is->fail ())          goto fail_stream;
       }
 
+      // There are two ways to view separation between two values: as following
+      // the first value or as preceding the second value. And one aspect that
+      // is determined by this is whether a separation violation is a problem
+      // with the first value or with the second, which becomes important if
+      // the user bails out before parsing the second value.
+      //
+      // Consider these two unseparated value (yes, in JSON they are two
+      // values, leading zeros are not allowed in JSON numbers):
+      //
+      // 01
+      //
+      // If the user bails out after parsing 0 in a stream that should have
+      // been newline-delimited, they most likely would want to get an error
+      // since this is most definitely an invalid value rather than two
+      // values that are not properly separated. So in this light we handle
+      // separators at the end of the first value.
+      //
       switch (e)
       {
+      case JSON_DONE:
+        {
+          // Deal with the following value separators.
+          //
+          // Note that we must not do this for the second JSON_DONE (or the
+          // first one in case there are no values) that signals the end of
+          // input.
+          //
+          if (multi_value_         &&
+              (parsed_ || peeked_) &&
+              (peeked_ ? *peeked_ : *parsed_) != JSON_DONE)
+          {
+            auto p (skip_separators ());
+
+            if (p.second == EOF && stream_.is != nullptr)
+            {
+              if (stream_.exception != nullptr) goto fail_rethrow;
+              if (stream_.is->fail ())          goto fail_stream;
+            }
+
+            // Note that we don't require separators after the last value.
+            //
+            if (!p.first && p.second != EOF)
+              goto fail_separation;
+
+            json_reset (impl_);
+          }
+          break;
+        }
       case JSON_ERROR: goto fail_json;
       case JSON_STRING:
       case JSON_NUMBER:
@@ -166,6 +278,12 @@ namespace stud
                           0 /* column */,
                           json_get_error (impl_));
 
+    fail_separation:
+      throw invalid_json (input_name != nullptr ? input_name : "",
+                          static_cast<uint64_t> (json_get_lineno (impl_)),
+                          0 /* column */,
+                          "missing separator between JSON values");
+
     fail_stream:
       throw invalid_json (input_name != nullptr ? input_name : "",
                           0 /* line */,
@@ -181,7 +299,7 @@ namespace stud
     {
       switch (e)
       {
-      case JSON_DONE: return std::nullopt;
+      case JSON_DONE: return nullopt;
       case JSON_OBJECT: return event::begin_object;
       case JSON_OBJECT_END: return event::end_object;
       case JSON_ARRAY: return event::begin_array;

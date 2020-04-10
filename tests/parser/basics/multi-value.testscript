@@ -1,0 +1,194 @@
+: empty-input
+:
+$* --multi=" " <''
+
+: single-value
+:
+$* --multi=" " <'1' >'  1: 1'
+
+: extra-whitespace-ignored
+: Extra JSON whitespace (newlines in this case) is ignored before first value,
+: between values, and after last value.
+:
+$* --multi=" " <<EOI >>EOO
+
+ 1
+ 2
+
+EOI
+  2: 1
+  3: 2
+EOO
+
+: null-separators
+: Zero or more JSON whitespaces should be accepted.
+:
+{
+  test.options += --multi
+
+  : valid
+  : One unseparated pair, one separated pair.
+  :
+  $* <'"1""2" 3' >>EOO
+    1: "1"
+    1: "2"
+    1: 3
+  EOO
+
+  : invalid-separator
+  : Non-whitespace separator.
+  :
+  $* <'1@2' >'  1: 1' 2>>EOE != 0
+  <stdin>:1:0: error: unexpected byte '@' in value
+  EOE
+}
+
+: any-whitespace
+: One or more JSON whitespaces should be accepted.
+:
+{
+  test.options += --multi=
+
+  : valid
+  :
+  $* <<EOI >>EOO
+  1 2
+   3
+  EOI
+    1: 1
+    1: 2
+    2: 3
+  EOO
+
+  : invalid-separator
+  :
+  $* <'1@2' >'  1: 1' 2>>EOE != 0
+  <stdin>:1:0: error: missing separator between JSON values
+  EOE
+
+  : unseparated
+  :
+  $* <'"1""2"' >'  1: "1"' 2>>EOE != 0
+  <stdin>:1:0: error: missing separator between JSON values
+  EOE
+}
+
+: specific-separators
+: At least one of the specified separators must be present.
+:
+{
+  test.options += --multi=" "
+
+  : valid
+  :
+  $* <'1 2' >>EOO
+    1: 1
+    1: 2
+  EOO
+
+  : invalid-separator
+  :
+  $* <<EOI >'  1: 1' 2>>EOE != 0
+  1
+  2
+  EOI
+  <stdin>:2:0: error: missing separator between JSON values
+  EOE
+
+  : unseparated
+  :
+  $* <'"1""2"' >'  1: "1"' 2>>EOE != 0
+  <stdin>:1:0: error: missing separator between JSON values
+  EOE
+}
+
+: multiple-separators
+:
+{
+  # Newline + space.
+  #
+  test.options += --multi="
+ "
+
+  : valid
+  :
+  $* <<EOI >>EOO
+  1 2
+  3
+   4
+
+  EOI
+    1: 1
+    1: 2
+    2: 3
+    3: 4
+  EOO
+
+  : invalid-separator
+  :
+  $* <"1	2" >'  1: 1' 2>>EOE != 0 # Note: it's a TAB.
+  <stdin>:1:0: error: missing separator between JSON values
+  EOE
+
+  : unseparated
+  :
+  $* <'"1""2"' >'  1: "1"' 2>>EOE != 0
+  <stdin>:1:0: error: missing separator between JSON values
+  EOE
+}
+
+: non-whitespace-separator
+:
+{
+  test.options += --multi="@"
+
+  : valid
+  :
+  $* <'1@2@3' >>EOO
+    1: 1
+    1: 2
+    1: 3
+  EOO
+
+  : invalid-separator
+  :
+  $* <'1 2' >'  1: 1' 2>>EOE != 0
+  <stdin>:1:0: error: missing separator between JSON values
+  EOE
+
+  : unseparated
+  :
+  $* <'"1""2"' >'  1: "1"' 2>>EOE != 0
+  <stdin>:1:0: error: missing separator between JSON values
+  EOE
+}
+
+: record-separator
+:
+{
+  # @@ Currently it's impossible to specify RS characters in testscript so
+  #    using `@` until that has been adressed.
+  #
+  test.options += --multi="@"
+
+  : leading-delimited
+  : RS-delimited: each value preceded by RS and succeeded by NL/LF.
+  :
+  $* <<EOI >>EOO
+  @1
+  @2
+
+  EOI
+    1: 1
+    2: 2
+  EOO
+
+  : empty
+  : While not valid per the RFC, we accept this.
+  :
+  $* <<EOI
+
+    @
+
+  EOI
+}

@@ -9,7 +9,7 @@ import libs = libstud-json%lib{stud-json}
 #
 exe{driver}: test = false
 
-./: alias{default peek}: exe{driver} testscript
+./: alias{default peek}: exe{driver} testscript{*}
 
 alias{default}:
 {

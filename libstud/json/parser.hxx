@@ -63,38 +63,104 @@ namespace stud
       // Parse JSON input text from std::istream.
       //
       // The name argument is used to identify the input being parsed. Note
-      // that the stream and name are kept as references so both must outlive
-      // the parser instance.
+      // that the stream, name, and separators are kept as references so they
+      // must outlive the parser instance.
       //
       // If stream exceptions are enabled then the std::ios_base::failure
       // exception is used to report input/output errors (badbit and failbit).
       // Otherwise, those are reported as the invalid_json exception.
       //
-      parser (std::istream&, const std::string& name);
-      parser (std::istream&, const char* name);
-      parser (std::istream&, std::string&&) = delete;
+      // If multi_value is true, enable the multi-value mode in which case the
+      // input stream may contain multiple JSON values (more precisely, zero
+      // or more). If false (the default), parsing will fail unless there is
+      // exactly one JSON value in the input stream.
+      //
+      // If multi_value is true, the separators argument specifies the
+      // required separator characters between JSON values. At least one of
+      // them must be present between every pair of JSON values (in addition
+      // to any number of JSON whitespaces). No separators are required after
+      // the last JSON value (but any found will be skipped).
+      //
+      // Specifically, if it is NULL, then no separation is required (that is,
+      // both `{...}{...}` and `{...}  {...}` would be valid). If it is empty,
+      // then at least one JSON whitespace is required. And if it is non-
+      // empty, then at least one of its characters must be present (for
+      // example, "\n\t" would require at least one newline or TAB character
+      // between JSON values).
+      //
+      // Note that a separator need not be valid JSON whitespace: any
+      // character is acceptable (though it probably shouldn't be an object,
+      // array, or string delimiter and should not occur within a non-self-
+      // delimited top-level value, such as `true`, `false`, `null`, or a
+      // number). All instances of required separators before and after a
+      // value are skipped. Therefore JSON Text Sequences (RFC 7464; AKA
+      // Record Separator-delimited JSON), which requires the RS (0x1E)
+      // character before each value, can be handled as well.
+      //
+      parser (std::istream&,
+              const std::string& name,
+              bool multi_value = false,
+              const char* separators = nullptr);
+      parser (std::istream&,
+              const char* name,
+              bool multi_value = false,
+              const char* separators = nullptr);
+      parser (std::istream&,
+              std::string&&,
+              bool = false,
+              const char* = nullptr) = delete;
 
       // Parse a memory buffer that contains the entire JSON input text.
       //
       // The name argument is used to identify the input being parsed. Note
-      // that the buffer and name are kept as references so both must outlive
-      // the parser instance.
+      // that the buffer, name, and separators are kept as references so they
+      // must outlive the parser instance.
       //
-      parser (const void* text, std::size_t size, const std::string& name);
-      parser (const void* text, std::size_t size, const char* name);
-      parser (const void*, std::size_t, std::string&&) = delete;
+      parser (const void* text,
+              std::size_t size,
+              const std::string& name,
+              bool multi_value = false,
+              const char* separators = nullptr);
+      parser (const void* text,
+              std::size_t size,
+              const char* name,
+              bool multi_value = false,
+              const char* separators = nullptr);
+      parser (const void*,
+              std::size_t,
+              std::string&&,
+              bool = false,
+              const char* = nullptr) = delete;
 
       // Similar to the above but parse a string.
       //
-      parser (const std::string& text, const std::string& name);
-      parser (const std::string& text, const char* name);
-      parser (const std::string&, std::string&&) = delete;
+      parser (const std::string& text,
+              const std::string& name,
+              bool multi_value = false,
+              const char* separators = nullptr);
+      parser (const std::string& text,
+              const char* name,
+              bool multi_value = false,
+              const char* separators = nullptr);
+      parser (const std::string&,
+              std::string&&,
+              bool = false,
+              const char* = nullptr) = delete;
 
       // Similar to the above but parse a C-string.
       //
-      parser (const char* text, const std::string& name);
-      parser (const char* text, const char* name);
-      parser (const char*, std::string&&) = delete;
+      parser (const char* text,
+              const std::string& name,
+              bool multi_value = false,
+              const char* separators = nullptr);
+      parser (const char* text,
+              const char* name,
+              bool multi_value = false,
+              const char* separators = nullptr);
+      parser (const char*,
+              std::string&&,
+              bool = false,
+              const char* = nullptr) = delete;
 
       parser (parser&&) = delete;
       parser (const parser&) = delete;
@@ -102,20 +168,74 @@ namespace stud
       parser& operator= (parser&&) = delete;
       parser& operator= (const parser&) = delete;
 
-      // Return the next event.
+      // Return the next event or nullopt if end of input is reached.
       //
-      //     while (optional<event> e = p.next ())
+      // In the single-value parsing mode (default) the parsing code could
+      // look like this:
+      //
+      //     while (optional<event> e = p.next())
+      //     {
+      //       switch (*e)
+      //       {
+      //         // ...
+      //       }
+      //     }
+      //
+      // In the multi-value mode the parser additionally returns nullopt after
+      // every JSON value parsed (so there will be two nullopt's after the
+      // last JSON value, the second indicating the end of input).
+      //
+      // One way to perform multi-value parsing is with the help of the peek()
+      // function (see below):
+      //
+      //     while (p.peek ())
+      //     {
+      //       while (optional<event> e = p.next ())
+      //       {
+      //         switch (*e)
+      //         {
+      //           //...
+      //         }
+      //       }
+      //     }
+      //
+      // Note that while the single-value mode will always parse exactly one
+      // value, the multi-value mode will accept zero values in which case a
+      // single nullopt is returned.
       //
       std::optional<event>
       next ();
 
       // The range-based for loop support.
       //
-      //     for (event e: p)
+      // In the single-value parsing mode (default) the parsing code could
+      // look like this:
       //
-      // Generally, the iterator interface doesn't make much sense for the
-      // parser so for now we have an implementation that is just enough for
-      // the range-based for.
+      //     for (event e: p)
+      //     {
+      //       switch (e)
+      //       {
+      //         //...
+      //       }
+      //     }
+      //
+      // And in the multi-value mode (see next() for more information) like
+      // this:
+      //
+      //     while (p.peek ())
+      //     {
+      //       for (event e: p)
+      //       {
+      //         switch (e)
+      //         {
+      //           //...
+      //         }
+      //       }
+      //     }
+      //
+      // Note that generally, the iterator interface doesn't make much sense
+      // for the parser so for now we have an implementation that is just
+      // enough for the range-based for.
       //
       struct iterator;
 
@@ -244,6 +364,9 @@ namespace stud
       value_event (std::optional<event>) noexcept;
 
       stream stream_;
+
+      bool multi_value_;
+      const char* separators_;
 
       // The *_p_ members indicate whether the value is present (cached).
       // Note: not using optional not to reallocate the string's buffer.

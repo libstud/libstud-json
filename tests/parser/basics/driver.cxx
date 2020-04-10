@@ -1,9 +1,10 @@
-// Usage: argv[0] [--peek] --fail-exc|--fail-bit|[<mode>]
+// Usage: argv[0] [--multi[=<sep>]] [--peek] --fail-exc|--fail-bit|[<mode>]
 //
-// --peek      -- pre-peek every token before parsing (must come first)
-// --fail-exc  -- fail due to istream exception
-// --fail-bit  -- fail due to istream badbit
-// <mode>      -- numeric value parsing mode: i|u|f|d|l|
+// --multi=<sep> -- enable multi-value mode with the specified separators
+// --peek        -- pre-peek every token before parsing (must come first)
+// --fail-exc    -- fail due to istream exception
+// --fail-bit    -- fail due to istream badbit
+// <mode>        -- numeric value parsing mode: i|u|f|d|l|
 
 #include <cassert>
 #include <cstdint>
@@ -31,23 +32,35 @@ number (const string& m, json::parser& p)
 
 int main (int argc, const char* argv[])
 {
+  bool multi (false);
+  const char* sep (nullptr);
+  bool peek (false);
   bool fail_exc (false);
   bool fail_bit (false);
-  bool peek (false);
+
   string nm;
+  for (int i (1); i < argc; ++i)
   {
-    int i (1);
-    string o;
+    string o (argv[i]);
 
-    if (argc > i && (o = argv[i]) == "--peek") {peek = true; ++i;}
-
-    if (argc > i)
+    if (o.compare (0, 7, "--multi") == 0)
     {
-      o = argv[i];
-      if      (o == "--fail-exc") fail_exc = true;
-      else if (o == "--fail-bit") fail_bit = true;
-      else nm = move (o);
+      multi = true;
+      if (o.size () > 7)
+        sep = argv[i] + 8;
+      continue;
     }
+
+    if (o == "--peek")
+    {
+      peek = true;
+      continue;
+    }
+
+    if      (o == "--fail-exc") fail_exc = true;
+    else if (o == "--fail-bit") fail_bit = true;
+    else nm = move (o);
+    break; // One of these should be last.
   }
 
   try
@@ -62,15 +75,12 @@ int main (int argc, const char* argv[])
                       istream::failbit |
                       (fail_exc ? istream::eofbit : istream::goodbit));
 
-    parser p (cin, "<stdin>");
+    parser p (cin, "<stdin>", multi, sep);
     size_t i (0); // Indentation.
 
     cout << right << setfill (' '); // Line number formatting.
 
-    if (peek)
-      p.peek();
-
-    for (event e: p)
+    auto process_event = [&p, &i, nm, fail_bit] (event e)
     {
       size_t j (i);
       string s;
@@ -92,9 +102,33 @@ int main (int argc, const char* argv[])
 
       if (fail_bit)
         cin.setstate (istream::badbit);
+    };
 
+    // Use the "canonical" parsing code for both modes.
+    //
+    if (!multi)
+    {
       if (peek)
-        p.peek();
+        p.peek ();
+
+      for (event e: p)
+      {
+        process_event (e);
+
+        if (peek)
+          p.peek ();
+      }
+    }
+    else
+    {
+      while (p.peek ())
+        for (event e: p)
+        {
+          process_event (e);
+
+          if (peek)
+            p.peek ();
+        }
     }
 
     return 0;

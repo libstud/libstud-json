@@ -31,38 +31,54 @@ namespace stud
     }
 
     inline parser::
-    parser (std::istream& is, const std::string& n)
-        : parser (is, n.c_str ())
+    parser (std::istream& is, const std::string& n, bool mv, const char* sep)
+        : parser (is, n.c_str (), mv, sep)
     {
     }
 
     inline parser::
-    parser (const void* t, std::size_t s, const std::string& n)
-        : parser (t, s, n.c_str ())
+    parser (const void* t,
+            std::size_t s,
+            const std::string& n,
+            bool mv,
+            const char* sep)
+        : parser (t, s, n.c_str (), mv, sep)
     {
     }
 
     inline parser::
-    parser (const std::string& text, const std::string& name)
-        : parser (text.data (), text.size (), name.c_str ())
+    parser (const std::string& t,
+            const std::string& n,
+            bool mv,
+            const char* sep)
+        : parser (t.data (), t.size (), n.c_str (), mv, sep)
     {
     }
 
     inline parser::
-    parser (const std::string& text, const char* name)
-        : parser (text.data (), text.size (), name)
+    parser (const std::string& t,
+            const char* n,
+            bool mv,
+            const char* sep)
+        : parser (t.data (), t.size (), n, mv, sep)
     {
     }
 
     inline parser::
-    parser (const char* text, const std::string& name)
-        : parser (text, std::strlen (text), name.c_str ())
+    parser (const char* t,
+            const std::string& n,
+            bool mv,
+            const char* sep)
+        : parser (t, std::strlen (t), n.c_str (), mv, sep)
     {
     }
 
     inline parser::
-    parser (const char* text, const char* name)
-        : parser (text, std::strlen (text), name)
+    parser (const char* t,
+            const char* n,
+            bool mv,
+            const char* sep)
+        : parser (t, std::strlen (t), n, mv, sep)
     {
     }
 
