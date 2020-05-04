@@ -98,7 +98,8 @@ int main (int argc, const char* argv[])
       case event::null:         s = "NULL";                              break;
       }
 
-      cout << setw (3) << p.line () << ": " << string (j, ' ') << s << '\n';
+      cout << setw (3) << p.line () << "," << setw (3) << p.column () << ": "
+           << string (j, ' ') << s << '\n';
 
       if (fail_bit)
         cin.setstate (istream::badbit);

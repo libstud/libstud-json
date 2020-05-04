@@ -98,7 +98,7 @@ namespace stud
     optional<event> parser::
     next ()
     {
-      name_p_ = value_p_ = line_p_ = false;
+      name_p_ = value_p_ = location_p_ = false;
 
       // Note that for now we don't worry about the state of the parser if
       // next_impl() throws assuming it is not going to be reused.
@@ -122,7 +122,7 @@ namespace stud
         if (parsed_)
         {
           cache_parsed_data ();
-          cache_parsed_line ();
+          cache_parsed_location ();
         }
         peeked_ = next_impl ();
       }
@@ -130,16 +130,54 @@ namespace stud
     }
 
     std::uint64_t parser::
-    line () const
+    line () const noexcept
     {
-      if (!line_p_)
+      if (!location_p_)
       {
-        assert (parsed_ && !peeked_);
+        if (!parsed_)
+          return 0;
+
+        assert (!peeked_);
+
         return static_cast<uint64_t> (
             json_get_lineno (const_cast<json_stream*> (impl_)));
       }
 
       return line_;
+    }
+
+    std::uint64_t parser::
+    column () const noexcept
+    {
+      if (!location_p_)
+      {
+        if (!parsed_)
+          return 0;
+
+        assert (!peeked_);
+
+        return static_cast<uint64_t> (
+            json_get_column (const_cast<json_stream*> (impl_)));
+      }
+
+      return column_;
+    }
+
+    std::uint64_t parser::
+    position () const noexcept
+    {
+      if (!location_p_)
+      {
+        if (!parsed_)
+          return 0;
+
+        assert (!peeked_);
+
+        return static_cast<uint64_t> (
+            json_get_position (const_cast<json_stream*> (impl_)));
+      }
+
+      return position_;
     }
 
     json_type parser::
@@ -152,7 +190,11 @@ namespace stud
       // Read characters between values skipping required separators and JSON
       // whitespaces. Return whether a required separator was encountered as
       // well as the first non-separator/whitespace character (which, if EOF,
-      // should trigger a check for input/output errors.
+      // should trigger a check for input/output errors).
+      //
+      // Note that the returned non-separator will not have been extracted
+      // from the input (so position, column, etc. will still refer to its
+      // predecessor).
       //
       auto skip_separators = [this] () -> pair<bool, int>
       {
@@ -252,7 +294,10 @@ namespace stud
             // Note that we don't require separators after the last value.
             //
             if (!p.first && p.second != EOF)
+            {
+              json_source_get (impl_); // Consume to update column number.
               goto fail_separation;
+            }
 
             json_reset (impl_);
           }
@@ -275,19 +320,22 @@ namespace stud
     fail_json:
       throw invalid_json (input_name != nullptr ? input_name : "",
                           static_cast<uint64_t> (json_get_lineno (impl_)),
-                          0 /* column */,
+                          static_cast<uint64_t> (json_get_column (impl_)),
+                          static_cast<uint64_t> (json_get_position (impl_)),
                           json_get_error (impl_));
 
     fail_separation:
       throw invalid_json (input_name != nullptr ? input_name : "",
                           static_cast<uint64_t> (json_get_lineno (impl_)),
-                          0 /* column */,
+                          static_cast<uint64_t> (json_get_column (impl_)),
+                          static_cast<uint64_t> (json_get_position (impl_)),
                           "missing separator between JSON values");
 
     fail_stream:
       throw invalid_json (input_name != nullptr ? input_name : "",
-                          0 /* line */,
-                          0 /* column */,
+                          static_cast<uint64_t> (json_get_lineno (impl_)),
+                          static_cast<uint64_t> (json_get_column (impl_)),
+                          static_cast<uint64_t> (json_get_position (impl_)),
                           "unable to read text");
 
     fail_rethrow:
@@ -346,10 +394,12 @@ namespace stud
     }
 
     void parser::
-    cache_parsed_line () noexcept
+    cache_parsed_location () noexcept
     {
       line_ = static_cast<uint64_t> (json_get_lineno (impl_));
-      line_p_ = true;
+      column_ = static_cast<uint64_t> (json_get_column (impl_));
+      position_ = static_cast<uint64_t> (json_get_position (impl_));
+      location_p_ = true;
     }
 
     bool parser::
@@ -379,7 +429,8 @@ namespace stud
 
       throw invalid_json (input_name != nullptr ? input_name : "",
                           line (),
-                          0 /* column */,
+                          column (),
+                          position (),
                           move (d));
     }
   } // namespace json

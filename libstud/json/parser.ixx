@@ -14,8 +14,9 @@ namespace stud
     invalid_json (std::string n,
                   std::uint64_t l,
                   std::uint64_t c,
+                  std::uint64_t p,
                   const std::string& d)
-        : invalid_json (move (n), l, c, d.c_str ())
+        : invalid_json (move (n), l, c, p, d.c_str ())
     {
     }
 
@@ -23,10 +24,11 @@ namespace stud
     invalid_json (std::string n,
                   std::uint64_t l,
                   std::uint64_t c,
+                  std::uint64_t p,
                   const char* d)
         : invalid_argument (d),
           name (std::move (n)),
-          line (l), column (c)
+          line (l), column (c), position (p)
     {
     }
 

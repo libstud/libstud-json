@@ -10,28 +10,28 @@ $* <<EOI >>EOO
   "subobj":  {"foo": "bar"}
 }
 EOI
-  1: {
-  2:   string
-  2:   "str"
-  3:   number
-  3:   123
-  4:   boolean
-  4:   true
-  5:   null
-  5:   NULL
-  6:   array
-  6:   [
-  6:     "str"
-  6:     123
-  6:     false
-  6:     NULL
-  6:   ]
-  7:   subobj
-  7:   {
-  7:     foo
-  7:     "bar"
-  7:   }
-  8: }
+  1,  1: {
+  2,  3:   string
+  2, 14:   "str"
+  3,  3:   number
+  3, 14:   123
+  4,  3:   boolean
+  4, 14:   true
+  5,  3:   null
+  5, 14:   NULL
+  6,  3:   array
+  6, 14:   [
+  6, 15:     "str"
+  6, 22:     123
+  6, 27:     false
+  6, 34:     NULL
+  6, 38:   ]
+  7,  3:   subobj
+  7, 14:   {
+  7, 15:     foo
+  7, 22:     "bar"
+  7, 27:   }
+  8,  1: }
 EOO
 
 : empty
@@ -42,14 +42,14 @@ EOE
 
 : fail-exception
 :
-$* --fail-exc <'{' >'  1: {' 2>>EOE != 0
+$* --fail-exc <'{' >'  1,  1: {' 2>>EOE != 0
 error: unable to read from stdin
 EOE
 
 : fail-bit
 :
-$* --fail-bit <'{' >'  1: {' 2>>EOE != 0
-<stdin>:0:0: error: unable to read text
+$* --fail-bit <'{' >'  1,  1: {' 2>>EOE != 0
+<stdin>:1:1: error: unable to read text
 EOE
 
 : value-sint
@@ -57,22 +57,22 @@ EOE
 {
   : max
   :
-  $* i <'2147483647' >'  1: 2147483647'
+  $* i <'2147483647' >'  1,  1: 2147483647'
 
   : min
   :
-  $* i <'-2147483648' >'  1: -2147483648'
+  $* i <'-2147483648' >'  1,  1: -2147483648'
 
   : fail-min
   :
   $* i <'-2147483649' 2>>EOE != 0
-  <stdin>:1:0: error: invalid signed integer value: '-2147483649'
+  <stdin>:1:1: error: invalid signed integer value: '-2147483649'
   EOE
 
   : fail-max
   :
   $* i <'2147483648' 2>>EOE != 0
-  <stdin>:1:0: error: invalid signed integer value: '2147483648'
+  <stdin>:1:1: error: invalid signed integer value: '2147483648'
   EOE
 }
 
@@ -81,12 +81,12 @@ EOE
 {
   : max
   :
-  $* u <'4294967295' >'  1: 4294967295'
+  $* u <'4294967295' >'  1,  1: 4294967295'
 
   : fail-max
   :
   $* u <'4294967296' 2>>EOE != 0
-  <stdin>:1:0: error: invalid unsigned integer value: '4294967296'
+  <stdin>:1:1: error: invalid unsigned integer value: '4294967296'
   EOE
 }
 
@@ -95,26 +95,85 @@ EOE
 #
 : value-float
 :
-$* f <'0.123' >~'/  1: 0.123[0-9]*/'
+$* f <'0.123' >~'/  1,  1: 0.123[0-9]*/'
 
 : value-double
 :
-$* d <'0.1234' >~'/  1: 0.1234[0-9]*/'
+$* d <'0.1234' >~'/  1,  1: 0.1234[0-9]*/'
 
 : value-long-double
 :
-$* l <'0.12345' >~'/  1: 0.12345[0-9]*/'
+$* l <'0.12345' >~'/  1,  1: 0.12345[0-9]*/'
 
 # Test a bunch of corner cases.
 #
 : leading-zero
 :
-$* <'01' >'  1: 0' 2>>EOE != 0
-<stdin>:1:0: error: expected end of text instead of byte '1'
+$* <'01' >'  1,  1: 0' 2>>EOE != 0
+<stdin>:1:2: error: expected end of text instead of byte '1'
 EOE
 
 : wrong-letter
 :
 $* <'trux' 2>>EOE != 0
-<stdin>:1:0: error: expected 'e' instead of byte 'x'
+<stdin>:1:4: error: expected 'e' instead of byte 'x'
 EOE
+
+: error-within-value
+: Checks that, in case of invalid multi-character token, the column number
+: points to the errant character instead of the beginning of the token.
+:
+$* <'12a45' >'  1,  1: 12' 2>>EOE != 0
+<stdin>:1:3: error: expected end of text instead of byte 'a'
+EOE
+
+: utf-8
+:
+{
+  : 2-byte
+  :
+  {
+    : literal
+    :
+    $* <'"¢"' >'  1,  1: "¢"'
+
+    : escaped
+    :
+    $* <'"\u00A2"' >'  1,  1: "¢"'
+  }
+
+  : 3-byte
+  :
+  {
+    : literal
+    :
+    $* <'"ह"' >'  1,  1: "ह"'
+
+    : escaped
+    :
+    $* <'"\u0939"' >'  1,  1: "ह"'
+  }
+
+  : 2-and-3-byte
+  :
+  $* <'"ह\u00A2¢\u0939"' >'  1,  1: "ह¢¢ह"'
+
+  : column-numbers
+  : Checks that literal/directly-embedded multi-byte codepoints occupy only a
+  : single column and that escaped codepoints occupy as many columns as there
+  : are characters in the escape sequence.
+  :
+  $* <'["ह","¢","\u20AC"]' >>EOO
+    1,  1: [
+    1,  2:   "ह"
+    1,  6:   "¢"
+    1, 10:   "€"
+    1, 18: ]
+  EOO
+
+  : Invalid byte
+  :
+  $* <'"\u0MA2"' 2>>EOE != 0
+  <stdin>:1:5: error: invalid escape Unicode byte 'M'
+  EOE
+}

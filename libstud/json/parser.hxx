@@ -19,23 +19,24 @@ namespace stud
   //
   namespace json
   {
-    // @@ TODO: add position/offset?
-    //
     class invalid_json: public std::invalid_argument
     {
     public:
       std::string   name;
       std::uint64_t line;
       std::uint64_t column;
+      std::uint64_t position;
 
       invalid_json (std::string name,
                     std::uint64_t line,
                     std::uint64_t column,
+                    std::uint64_t position,
                     const std::string& description);
 
       invalid_json (std::string name,
                     std::uint64_t line,
                     std::uint64_t column,
+                    std::uint64_t position,
                     const char* description);
     };
 
@@ -282,12 +283,6 @@ namespace stud
       T
       value () const;
 
-      // Return the line number corresponding to the most recently parsed
-      // event.
-      //
-      std::uint64_t
-      line () const;
-
       // Return the value or object member name in the raw form.
       //
       // Calling this function on non-value/name events is legal in which case
@@ -296,6 +291,24 @@ namespace stud
       //
       std::pair<const char*, std::size_t>
       data () const {return std::make_pair (raw_s_, raw_n_);}
+
+      // Return the line number (1-based) corresponding to the most recently
+      // parsed event or 0 if nothing has been parsed yet.
+      //
+      std::uint64_t
+      line () const noexcept;
+
+      // Return the column number (1-based) corresponding to the beginning of
+      // the most recently parsed event or 0 if nothing has been parsed yet.
+      //
+      std::uint64_t
+      column () const noexcept;
+
+      // Return the position (byte offset) pointing immediately after the most
+      // recently parsed event or 0 if nothing has been parsed yet.
+      //
+      std::uint64_t
+      position () const noexcept;
 
       // Implementation details.
       //
@@ -352,10 +365,11 @@ namespace stud
       void
       cache_parsed_data ();
 
-      // Cache the line number as determined by the most recent call to
+      // Cache the location numbers as determined by the most recent call to
       // next_impl().
+      //
       void
-      cache_parsed_line () noexcept;
+      cache_parsed_location () noexcept;
 
       // Return true if this is a value event (string, number, boolean, or
       // null).
@@ -371,9 +385,9 @@ namespace stud
       // The *_p_ members indicate whether the value is present (cached).
       // Note: not using optional not to reallocate the string's buffer.
       //
-      std::string name_;   bool name_p_  = false;
-      std::string value_;  bool value_p_ = false;
-      std::uint64_t line_; bool line_p_  = false;
+      std::string name_;                       bool name_p_     = false;
+      std::string value_;                      bool value_p_    = false;
+      std::uint64_t line_, column_, position_; bool location_p_ = false;
 
       std::optional<json_type> parsed_; // Current parsed event if any.
       std::optional<json_type> peeked_; // Current peeked event if any.
