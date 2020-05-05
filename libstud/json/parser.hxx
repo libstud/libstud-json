@@ -102,10 +102,12 @@ namespace stud
               const std::string& name,
               bool multi_value = false,
               const char* separators = nullptr);
+
       parser (std::istream&,
               const char* name,
               bool multi_value = false,
               const char* separators = nullptr);
+
       parser (std::istream&,
               std::string&&,
               bool = false,
@@ -122,11 +124,13 @@ namespace stud
               const std::string& name,
               bool multi_value = false,
               const char* separators = nullptr);
+
       parser (const void* text,
               std::size_t size,
               const char* name,
               bool multi_value = false,
               const char* separators = nullptr);
+
       parser (const void*,
               std::size_t,
               std::string&&,
@@ -139,10 +143,12 @@ namespace stud
               const std::string& name,
               bool multi_value = false,
               const char* separators = nullptr);
+
       parser (const std::string& text,
               const char* name,
               bool multi_value = false,
               const char* separators = nullptr);
+
       parser (const std::string&,
               std::string&&,
               bool = false,
@@ -154,10 +160,12 @@ namespace stud
               const std::string& name,
               bool multi_value = false,
               const char* separators = nullptr);
+
       parser (const char* text,
               const char* name,
               bool multi_value = false,
               const char* separators = nullptr);
+
       parser (const char*,
               std::string&&,
               bool = false,
