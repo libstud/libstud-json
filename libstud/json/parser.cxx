@@ -70,7 +70,7 @@ namespace stud
     // might throw after opening the stream).
     //
     parser::
-    parser (istream& is, const char* n, bool mv, const char* sep)
+    parser (istream& is, const char* n, bool mv, const char* sep) noexcept
         : input_name (n),
           stream_ {&is, nullptr},
           multi_value_ (mv),
@@ -83,7 +83,11 @@ namespace stud
     }
 
     parser::
-    parser (const void* t, size_t s, const char* n, bool mv, const char* sep)
+    parser (const void* t,
+            size_t s,
+            const char* n,
+            bool mv,
+            const char* sep) noexcept
         : input_name (n),
           stream_ {nullptr, nullptr},
           multi_value_ (mv),

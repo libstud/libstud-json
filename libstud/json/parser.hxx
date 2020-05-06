@@ -101,12 +101,12 @@ namespace stud
       parser (std::istream&,
               const std::string& name,
               bool multi_value = false,
-              const char* separators = nullptr);
+              const char* separators = nullptr) noexcept;
 
       parser (std::istream&,
               const char* name,
               bool multi_value = false,
-              const char* separators = nullptr);
+              const char* separators = nullptr) noexcept;
 
       parser (std::istream&,
               std::string&&,
@@ -123,13 +123,13 @@ namespace stud
               std::size_t size,
               const std::string& name,
               bool multi_value = false,
-              const char* separators = nullptr);
+              const char* separators = nullptr) noexcept;
 
       parser (const void* text,
               std::size_t size,
               const char* name,
               bool multi_value = false,
-              const char* separators = nullptr);
+              const char* separators = nullptr) noexcept;
 
       parser (const void*,
               std::size_t,
@@ -142,12 +142,12 @@ namespace stud
       parser (const std::string& text,
               const std::string& name,
               bool multi_value = false,
-              const char* separators = nullptr);
+              const char* separators = nullptr) noexcept;
 
       parser (const std::string& text,
               const char* name,
               bool multi_value = false,
-              const char* separators = nullptr);
+              const char* separators = nullptr) noexcept;
 
       parser (const std::string&,
               std::string&&,
@@ -159,12 +159,12 @@ namespace stud
       parser (const char* text,
               const std::string& name,
               bool multi_value = false,
-              const char* separators = nullptr);
+              const char* separators = nullptr) noexcept;
 
       parser (const char* text,
               const char* name,
               bool multi_value = false,
-              const char* separators = nullptr);
+              const char* separators = nullptr) noexcept;
 
       parser (const char*,
               std::string&&,
