@@ -9,17 +9,20 @@
 #include <exception> // exception_ptr
 #include <stdexcept> // invalid_argument
 
+#include <libstud/json/event.hxx>
+
 #include <libstud/json/pdjson.h> // Implementation details.
 
 #include <libstud/json/export.hxx>
 
 namespace stud
 {
-  // Using the RFC8259 terminology (JSON text, JSON value, object member).
+  // Using the RFC8259 terminology (JSON (input) text, JSON value, object
+  // member).
   //
   namespace json
   {
-    class invalid_json: public std::invalid_argument
+    class invalid_json_input: public std::invalid_argument
     {
     public:
       std::string   name;
@@ -27,30 +30,17 @@ namespace stud
       std::uint64_t column;
       std::uint64_t position;
 
-      invalid_json (std::string name,
-                    std::uint64_t line,
-                    std::uint64_t column,
-                    std::uint64_t position,
-                    const std::string& description);
+      invalid_json_input (std::string name,
+                          std::uint64_t line,
+                          std::uint64_t column,
+                          std::uint64_t position,
+                          const std::string& description);
 
-      invalid_json (std::string name,
-                    std::uint64_t line,
-                    std::uint64_t column,
-                    std::uint64_t position,
-                    const char* description);
-    };
-
-    // Parsing event.
-    //
-    enum class event
-    {
-      begin_object, end_object,
-      begin_array,  end_array,
-      name,
-      string,
-      number,
-      boolean,
-      null
+      invalid_json_input (std::string name,
+                          std::uint64_t line,
+                          std::uint64_t column,
+                          std::uint64_t position,
+                          const char* description);
     };
 
     class LIBSTUD_JSON_SYMEXPORT parser
@@ -69,7 +59,7 @@ namespace stud
       //
       // If stream exceptions are enabled then the std::ios_base::failure
       // exception is used to report input/output errors (badbit and failbit).
-      // Otherwise, those are reported as the invalid_json exception.
+      // Otherwise, those are reported as the invalid_json_input exception.
       //
       // If multi_value is true, enable the multi-value mode in which case the
       // input stream may contain multiple JSON values (more precisely, zero
@@ -182,7 +172,7 @@ namespace stud
       // In the single-value parsing mode (default) the parsing code could
       // look like this:
       //
-      //     while (optional<event> e = p.next())
+      //     while (optional<event> e = p.next ())
       //     {
       //       switch (*e)
       //       {
@@ -285,7 +275,7 @@ namespace stud
       value ();
 
       // Convert the value to an integer, floating point, or bool. Throw
-      // invalid_json if the conversion is impossible without a loss.
+      // invalid_json_input if the conversion is impossible without a loss.
       //
       template <typename T>
       T

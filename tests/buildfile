@@ -1,1 +1,1 @@
-./: {*/ -build/ -fuzz-llvm/}
+./: {*/ -build/}

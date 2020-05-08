@@ -39,13 +39,13 @@ parse (const void* data, size_t size, bool multi, const char* sep)
         {
           p.value<int64_t> ();
         }
-        catch (const invalid_json&)
+        catch (const invalid_json_input&)
         {
           try
           {
             p.value<double> ();
           }
-          catch (const invalid_json&)
+          catch (const invalid_json_input&)
           {
             p.value ();
           }
@@ -65,7 +65,7 @@ parse (const void* data, size_t size, bool multi, const char* sep)
 
     return true;
   }
-  catch (const invalid_json&)
+  catch (const invalid_json_input&)
   {
     return false;
   }

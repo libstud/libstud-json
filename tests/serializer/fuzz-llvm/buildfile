@@ -1,0 +1,10 @@
+import libs = libstud-json%lib{stud-json}
+
+./: exe{driver}: {cxx}{driver} $libs
+
+exe{driver}:
+{
+  cxx.loptions += -fsanitize=fuzzer
+}
+
+./: exe{convert}: {cxx}{convert} $libs

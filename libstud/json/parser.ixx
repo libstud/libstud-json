@@ -10,22 +10,22 @@ namespace stud
 {
   namespace json
   {
-    inline invalid_json::
-    invalid_json (std::string n,
-                  std::uint64_t l,
-                  std::uint64_t c,
-                  std::uint64_t p,
-                  const std::string& d)
-        : invalid_json (move (n), l, c, p, d.c_str ())
+    inline invalid_json_input::
+    invalid_json_input (std::string n,
+                        std::uint64_t l,
+                        std::uint64_t c,
+                        std::uint64_t p,
+                        const std::string& d)
+        : invalid_json_input (move (n), l, c, p, d.c_str ())
     {
     }
 
-    inline invalid_json::
-    invalid_json (std::string n,
-                  std::uint64_t l,
-                  std::uint64_t c,
-                  std::uint64_t p,
-                  const char* d)
+    inline invalid_json_input::
+    invalid_json_input (std::string n,
+                        std::uint64_t l,
+                        std::uint64_t c,
+                        std::uint64_t p,
+                        const char* d)
         : invalid_argument (d),
           name (std::move (n)),
           line (l), column (c), position (p)

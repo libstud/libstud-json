@@ -134,7 +134,7 @@ int main (int argc, const char* argv[])
 
     return 0;
   }
-  catch (const json::invalid_json& e)
+  catch (const json::invalid_json_input& e)
   {
     cerr << e.name << ':' << e.line << ':' << e.column << ": error: "
          << e.what () << endl;

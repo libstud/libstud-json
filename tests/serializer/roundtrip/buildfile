@@ -1,0 +1,22 @@
+import libs = libstud-json%lib{stud-json}
+
+./: exe{driver}: cxx{driver} $libs
+
+# Run the tests twice, once with checking disabled and once with checking
+# enabled. If/when we have support for a for-loop in Testscript we can handle
+# this cleanly there. For now we use this alias trick (or hack, if you wish).
+#
+exe{driver}: test = false
+
+./: alias{unchecked checked}: exe{driver} testscript
+
+alias{unchecked}:
+{
+  test = exe{driver}
+}
+
+alias{checked}:
+{
+  test = exe{driver}
+  test.options += --check
+}

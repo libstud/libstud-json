@@ -322,25 +322,28 @@ namespace stud
       return e;
 
     fail_json:
-      throw invalid_json (input_name != nullptr ? input_name : "",
-                          static_cast<uint64_t> (json_get_lineno (impl_)),
-                          static_cast<uint64_t> (json_get_column (impl_)),
-                          static_cast<uint64_t> (json_get_position (impl_)),
-                          json_get_error (impl_));
+      throw invalid_json_input (
+          input_name != nullptr ? input_name : "",
+          static_cast<uint64_t> (json_get_lineno (impl_)),
+          static_cast<uint64_t> (json_get_column (impl_)),
+          static_cast<uint64_t> (json_get_position (impl_)),
+          json_get_error (impl_));
 
     fail_separation:
-      throw invalid_json (input_name != nullptr ? input_name : "",
-                          static_cast<uint64_t> (json_get_lineno (impl_)),
-                          static_cast<uint64_t> (json_get_column (impl_)),
-                          static_cast<uint64_t> (json_get_position (impl_)),
-                          "missing separator between JSON values");
+      throw invalid_json_input (
+          input_name != nullptr ? input_name : "",
+          static_cast<uint64_t> (json_get_lineno (impl_)),
+          static_cast<uint64_t> (json_get_column (impl_)),
+          static_cast<uint64_t> (json_get_position (impl_)),
+          "missing separator between JSON values");
 
     fail_stream:
-      throw invalid_json (input_name != nullptr ? input_name : "",
-                          static_cast<uint64_t> (json_get_lineno (impl_)),
-                          static_cast<uint64_t> (json_get_column (impl_)),
-                          static_cast<uint64_t> (json_get_position (impl_)),
-                          "unable to read text");
+      throw invalid_json_input (
+          input_name != nullptr ? input_name : "",
+          static_cast<uint64_t> (json_get_lineno (impl_)),
+          static_cast<uint64_t> (json_get_column (impl_)),
+          static_cast<uint64_t> (json_get_position (impl_)),
+          "unable to read JSON input text");
 
     fail_rethrow:
       rethrow_exception (move (stream_.exception));
@@ -431,11 +434,11 @@ namespace stud
       d.append (v, n);
       d += '\'';
 
-      throw invalid_json (input_name != nullptr ? input_name : "",
-                          line (),
-                          column (),
-                          position (),
-                          move (d));
+      throw invalid_json_input (input_name != nullptr ? input_name : "",
+                                line (),
+                                column (),
+                                position (),
+                                move (d));
     }
   } // namespace json
 } // namespace stud

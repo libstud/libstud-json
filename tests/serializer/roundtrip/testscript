@@ -1,0 +1,318 @@
+: simple
+:
+{
+  : number
+  :
+  $* <<EOI >>EOI
+  12345
+  EOI
+
+  : string
+  :
+  $* <<EOI >>EOI
+  ""
+  "हab¢"
+  EOI
+
+  : null
+  :
+  $* <<EOI >>EOI
+  null
+  EOI
+
+  : true
+  :
+  $* <<EOI >>EOI
+  true
+  EOI
+
+  : false
+  :
+  $* <<EOI >>EOI
+  false
+  EOI
+}
+
+: array
+:
+{
+  : empty
+  :
+  $* <<EOI >>EOI
+  []
+  EOI
+
+  : empty-pretty
+  :
+  $* --pretty <<EOI >>EOI
+  []
+  EOI
+
+  : single
+  :
+  $* <<EOI >>EOI
+  [1]
+  EOI
+
+  : single-pretty
+  :
+  $* --pretty <<EOI >>EOI
+  [
+    1
+  ]
+  EOI
+
+  : multi
+  :
+  $* <<EOI >>EOI
+  [1,2,3]
+  EOI
+
+  : multi-pretty
+  :
+  $* --pretty <<EOI >>EOI
+  [
+    1,
+    2,
+    3
+  ]
+  EOI
+
+  # Strings are given special treatment here because their quotes are
+  # additional delimiters.
+  #
+  : string
+  :
+  $* <<EOI >>EOI
+  ["abc","def",""]
+  EOI
+
+  : string-pretty
+  :
+  $* --pretty <<EOI >>EOI
+  [
+    "abc",
+    "def",
+    ""
+  ]
+  EOI
+
+  : array
+  :
+  $* <<EOI >>EOI
+  [[1,2,3],[]]
+  EOI
+
+  : array-pretty
+  :
+  $* --pretty <<EOI >>EOI
+  [
+    [
+      1,
+      2,
+      3
+    ],
+    []
+  ]
+  EOI
+
+  : object
+  :
+  $* <<EOI >>EOI
+  [{"a":1,"b":2,"c":3},{}]
+  EOI
+
+  : object-pretty
+  :
+  $* --pretty <<EOI >>EOI
+  [
+    {
+      "a": 1,
+      "b": 2,
+      "c": 3
+    },
+    {}
+  ]
+  EOI
+}
+
+: object
+:
+{
+  : empty
+  :
+  $* <<EOI >>EOI
+  {}
+  EOI
+
+  : empty-pretty
+  :
+  $* --pretty <<EOI >>EOI
+  {}
+  EOI
+
+  : single
+  :
+  $* <<EOI >>EOI
+  {"a":1}
+  EOI
+
+  : single-pretty
+  :
+  $* --pretty <<EOI >>EOI
+  {
+    "a": 1
+  }
+  EOI
+
+  : multi
+  :
+  $* <<EOI >>EOI
+  {"a":1,"b":2,"c":3}
+  EOI
+
+  : multi-pretty
+  :
+  $* --pretty <<EOI >>EOI
+  {
+    "a": 1,
+    "b": 2,
+    "c": 3
+  }
+  EOI
+
+  : string
+  :
+  $* <<EOI >>EOI
+  {"a":"abc","b":"def","c":""}
+  EOI
+
+  : string-pretty
+  :
+  $* --pretty <<EOI >>EOI
+  {
+    "a": "abc",
+    "b": "def",
+    "c": ""
+  }
+  EOI
+
+  : object
+  :
+  $* <<EOI >>EOI
+  {"a":{"b":1,"c":2,"d":3},"e":{}}
+  EOI
+
+  : object-pretty
+  :
+  $* --pretty <<EOI >>EOI
+  {
+    "a": {
+      "b": 1,
+      "c": 2,
+      "d": 3
+    },
+    "e": {}
+  }
+  EOI
+
+  : array
+  :
+  $* <<EOI >>EOI
+  {"a":[1,2,3],"b":[]}
+  EOI
+
+  : array-pretty
+  :
+  $* --pretty <<EOI >>EOI
+  {
+    "a": [
+      1,
+      2,
+      3
+    ],
+    "b": []
+  }
+  EOI
+}
+
+# Multiple levels of nesting covering all of the nesting cases: {{}}, {[]},
+# [[]], [{}].
+#
+: nested
+:
+{
+  : pretty
+  :
+  $* --pretty <<EOI >>EOI
+  {
+    "a": {
+      "b": [
+        {
+          "c": 1,
+          "d": 2,
+          "e": 3
+        },
+        {},
+        [
+          3,
+          4,
+          5
+        ],
+        []
+      ],
+      "f": []
+    },
+    "g": {}
+  }
+  EOI
+
+  : no-pretty
+  :
+  $* <<EOI >>EOI
+  {"a":{"b":[{"c":1,"d":2,"e":3},{},[3,4,5],[]],"f":[]},"g":{}}
+  EOI
+}
+
+: multival
+:
+{
+  : zero
+  : Checks that no newline is printed following a complete but empty value
+  : sequence, independently of whether or not pretty-printing is enabled.
+  :
+  {
+    : pretty
+    :
+    $* --pretty <'' >:''
+
+    : no-pretty
+    :
+    $* <'' >:''
+  }
+
+  : multi
+  : Checks that top-level values are always separated, independently of
+  : whether or not pretty-printing is enabled.
+  :
+  {
+    : pretty
+    :
+    $* <<EOI >>EOI
+    1
+    "abc"
+    true
+    false
+    null
+    []
+    {}
+    EOI
+
+    : no-pretty
+    :
+    $* --pretty <<EOI >>EOI
+    1
+    2
+    EOI
+  }
+}
