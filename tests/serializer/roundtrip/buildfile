@@ -9,14 +9,8 @@ import libs = libstud-json%lib{stud-json}
 exe{driver}: test = false
 
 ./: alias{unchecked checked}: exe{driver} testscript
-
-alias{unchecked}:
 {
   test = exe{driver}
 }
 
-alias{checked}:
-{
-  test = exe{driver}
-  test.options += --check
-}
+alias{checked}: test.options += --check

@@ -1,6 +1,6 @@
 import libs = libstud-json%lib{stud-json}
 
-./: exe{driver}: {hxx cxx}{*} $libs
+./: exe{driver}: {cxx}{driver} $libs
 
 # Run the tests twice, once as is and another time with a pre-peek of every
 # token (as an extra test for the peek logic). If/when we have support for a
@@ -10,14 +10,8 @@ import libs = libstud-json%lib{stud-json}
 exe{driver}: test = false
 
 ./: alias{default peek}: exe{driver} testscript{*}
-
-alias{default}:
 {
   test = exe{driver}
 }
 
-alias{peek}:
-{
-  test = exe{driver}
-  test.options += --peek
-}
+alias{peek}: test.options += --peek
