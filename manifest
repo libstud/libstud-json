@@ -12,5 +12,5 @@ email: boris@codesynthesis.com
 # The <optional> header is unavailable in some legacy
 # configurations.
 #builds: all
-depends: * build2 >= 0.12.0
-depends: * bpkg >= 0.12.0
+depends: * build2 >= 0.13.0
+depends: * bpkg >= 0.13.0
