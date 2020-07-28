@@ -1,4 +1,4 @@
-./: {*/ -build/ -pdjson/} doc{README.md LICENSE AUTHORS NEWS} manifest
+./: {*/ -build/ -pdjson/} doc{README.md NEWS} legal{LICENSE AUTHORS} manifest
 
 # Don't install tests.
 #
