@@ -9,6 +9,7 @@ description-file: README.md
 changes-file: NEWS
 url: https://github.com/libstud/libstud-json
 email: boris@codesynthesis.com
+build-warning-email: boris@codesynthesis.com
 # The <optional> header is unavailable in some legacy
 # configurations.
 #builds: all
