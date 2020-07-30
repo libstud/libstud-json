@@ -8,8 +8,8 @@ topics: C++, JSON, parsing, serialization, streaming
 description-file: README.md
 changes-file: NEWS
 url: https://github.com/libstud/libstud-json
-email: boris@codesynthesis.com
-build-warning-email: boris@codesynthesis.com
+email: libstud-authors@build2.org
+build-warning-email: libstud-authors@build2.org
 # The <optional> header is unavailable in some legacy
 # configurations.
 #builds: all
