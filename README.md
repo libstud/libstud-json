@@ -3,6 +3,13 @@
 A portable, dependency-free, MIT-licensed JSON pull-parser/push-serializer
 library for C++.
 
+The goal of this library is to provide a *pull*-style parser (instead of
+*push*/SAX or DOM) and *push*-style serializer with clean, modern interfaces
+and conforming, well-tested (and well-fuzzed, including the serializer)
+implementations. In particular, pull-style parsers are not very common, and we
+couldn't find any C++ implementations that also satisfy the above
+requirements.
+
 Typical parser usage:
 
 ```c++
