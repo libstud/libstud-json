@@ -129,6 +129,7 @@ namespace stud
     parse_value (const char* b, size_t n, const parser& p)
     {
       char* e (nullptr);
+      errno = 0; // We must clear it according to POSIX.
       std::int64_t v (strtoll (b, &e, 10)); // Can't throw.
 
       if (e == b || e != b + n || errno == ERANGE ||
@@ -147,6 +148,7 @@ namespace stud
     parse_value (const char* b, size_t n, const parser& p)
     {
       char* e (nullptr);
+      errno = 0; // We must clear it according to POSIX.
       std::uint64_t v (strtoull (b, &e, 10)); // Can't throw.
 
       if (e == b || e != b + n || errno == ERANGE ||
@@ -161,6 +163,7 @@ namespace stud
     parse_value (const char* b, size_t n, const parser& p)
     {
       char* e (nullptr);
+      errno = 0; // We must clear it according to POSIX.
       T r (std::strtof (b, &e));
 
       if (e == b || e != b + n || errno == ERANGE)
@@ -174,6 +177,7 @@ namespace stud
     parse_value (const char* b, size_t n, const parser& p)
     {
       char* e (nullptr);
+      errno = 0; // We must clear it according to POSIX.
       T r (std::strtod (b, &e));
 
       if (e == b || e != b + n || errno == ERANGE)
@@ -187,6 +191,7 @@ namespace stud
     parse_value (const char* b, size_t n, const parser& p)
     {
       char* e (nullptr);
+      errno = 0; // We must clear it according to POSIX.
       T r (std::strtold (b, &e));
 
       if (e == b || e != b + n || errno == ERANGE)
