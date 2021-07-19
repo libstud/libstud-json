@@ -448,8 +448,7 @@ namespace stud
 //
 // Let's keep it last since the implementation defines a couple of macros.
 //
-#if defined(__clang__) || defined (__GNUC__)
-#  pragma GCC diagnostic push
+#if defined(__clang__) || defined(__GNUC__)
 #  pragma GCC diagnostic ignored "-Wunused-function"
 #endif
 
@@ -459,7 +458,3 @@ extern "C"
 #define PDJSON_STACK_MAX 2048
 #include "pdjson.c"
 }
-
-#if defined(__clang__) || defined (__GNUC__)
-#  pragma GCC diagnostic pop
-#endif
