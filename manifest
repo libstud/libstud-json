@@ -1,7 +1,7 @@
 : 1
 name: libstud-json
 project: libstud
-version: 0.2.0-a.0.z
+version: 0.2.0
 summary: JSON pull-parser/push-serializer library for C++
 license: MIT ; MIT License.
 topics: C++, JSON, parsing, serialization, streaming
