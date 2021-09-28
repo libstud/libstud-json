@@ -1,7 +1,9 @@
-#include <cassert>
 #include <cstdint>
 
 #include <libstud/json/parser.hxx>
+
+#undef NDEBUG
+#include <cassert>
 
 using namespace std;
 using namespace stud::json;

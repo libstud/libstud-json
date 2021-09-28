@@ -2,6 +2,9 @@
 
 #include <libstud/json/parser.hxx>
 
+#undef NDEBUG
+#include <cassert>
+
 int
 main ()
 {

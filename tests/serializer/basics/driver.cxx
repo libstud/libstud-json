@@ -1,9 +1,11 @@
 #include <limits>
-#include <cassert>
 #include <cstring> // memcmp()
 #include <sstream>
 
 #include <libstud/json/serializer.hxx>
+
+#undef NDEBUG
+#include <cassert>
 
 using namespace std;
 using namespace stud::json;

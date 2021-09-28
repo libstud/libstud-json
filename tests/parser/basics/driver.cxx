@@ -6,12 +6,14 @@
 // --fail-bit    -- fail due to istream badbit
 // <mode>        -- numeric value parsing mode: i|u|f|d|l|
 
-#include <cassert>
 #include <cstdint>
 #include <iostream>
 #include <iomanip>
 
 #include <libstud/json/parser.hxx>
+
+#undef NDEBUG
+#include <cassert>
 
 using namespace std;
 namespace json = stud::json;

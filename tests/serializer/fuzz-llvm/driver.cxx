@@ -25,6 +25,9 @@
 
 #include <libstud/json/serializer.hxx>
 
+#undef NDEBUG
+#include <cassert>
+
 using namespace std;
 using namespace stud::json;
 
