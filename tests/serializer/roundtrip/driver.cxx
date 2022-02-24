@@ -5,6 +5,7 @@
 
 #include <iostream>
 
+#include <libstud/optional.hxx>
 #include <libstud/json/parser.hxx>
 #include <libstud/json/serializer.hxx>
 
@@ -17,6 +18,8 @@ using namespace stud::json;
 int
 main (int argc, const char* argv[])
 {
+  using stud::nullopt;
+
   bool check (false);
   bool pretty (false);
 

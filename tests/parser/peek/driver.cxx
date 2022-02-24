@@ -1,20 +1,23 @@
 #include <iostream>
 
+#include <libstud/optional.hxx>
 #include <libstud/json/parser.hxx>
 
 #undef NDEBUG
 #include <cassert>
 
+using namespace std;
+using namespace stud::json;
+
 int
 main ()
 {
-  using namespace std;
-  using namespace stud::json;
+  using stud::nullopt;
 
   // Value in initial state.
   //
   {
-    parser p("1", "test");
+    parser p ("1", "test");
     // assert (p.value ().empty ());
     assert (p.data ().first == nullptr);
     assert (p.data ().second == 0);
@@ -24,7 +27,7 @@ main ()
   // through data().
   //
   {
-    parser p("1", "test");
+    parser p ("1", "test");
     assert (p.peek () == event::number);
     // assert (p.value ().empty ());
     assert (p.data ().first != nullptr);
@@ -34,7 +37,7 @@ main ()
   // Next in initial state.
   //
   {
-    parser p("1", "test");
+    parser p ("1", "test");
     assert (p.next () == event::number);
     assert (p.value<int> () == 1);
     assert (p.data ().first != nullptr);
@@ -44,7 +47,7 @@ main ()
   // Peek followed by next.
   //
   {
-    parser p("1", "test");
+    parser p ("1", "test");
     assert (p.peek () == event::number);
     // assert (p.value ().empty ());
     assert (p.data ().first != nullptr);
@@ -60,7 +63,7 @@ main ()
   // Next followed by peek.
   //
   {
-    parser p("[1,2]", "test");
+    parser p ("[1,2]", "test");
     assert (p.next () == event::begin_array);
     assert (p.next () == event::number);
     assert (p.value<int> () == 1);
@@ -72,7 +75,7 @@ main ()
   // Latest value always available via data().
   //
   {
-    parser p("[1,222]", "test");
+    parser p ("[1,222]", "test");
     assert (p.peek () == event::begin_array);
     assert (p.data ().first == nullptr);
     assert (p.data ().second == 0);
@@ -106,7 +109,7 @@ main ()
   // After peek(), value() returns value from previous next().
   //
   {
-    parser p("[1, \"hello\", 3]", "test");
+    parser p ("[1, \"hello\", 3]", "test");
     assert (p.next () == event::begin_array);
     assert (p.next () == event::number);
     assert (p.value () == "1");
@@ -118,7 +121,7 @@ main ()
   // Peek is idempotent.
   //
   {
-    parser p("[1, \"hello\"]", "test");
+    parser p ("[1, \"hello\"]", "test");
     assert (p.peek () == event::begin_array);
     assert (p.peek () == event::begin_array);
 
@@ -182,7 +185,7 @@ main ()
   // Peek EOF.
   //
   {
-    parser p("1", "test");
+    parser p ("1", "test");
     assert (p.next () == event::number);
     assert (p.peek () == nullopt);
     assert (p.value () == "1");
@@ -194,7 +197,7 @@ main ()
   // Parse at EOF.
   //
   {
-    parser p("1", "test");
+    parser p ("1", "test");
     assert (p.next () == event::number);
 
     assert (p.next () == nullopt);
@@ -209,7 +212,7 @@ main ()
   // Beginning-to-end: parse only.
   //
   {
-    parser p("[1,2]", "test");
+    parser p ("[1,2]", "test");
     assert (p.next () == event::begin_array);
     assert (p.next () == event::number);
     assert (p.value<int> () == 1);
@@ -222,7 +225,7 @@ main ()
   // Beginning-to-end: peek first.
   //
   {
-    parser p("[1,2,3]", "test");
+    parser p ("[1,2,3]", "test");
     assert (p.peek () == event::begin_array);
     assert (p.peek () == event::begin_array);
     assert (p.next () == event::begin_array);
@@ -246,7 +249,7 @@ main ()
   // Beginning-to-end: parse first.
   //
   {
-    parser p("[1,2,3]", "test");
+    parser p ("[1,2,3]", "test");
     assert (p.next () == event::begin_array);
     assert (p.peek () == event::number); // 1
     assert (p.peek () == event::number); // 1
@@ -268,7 +271,7 @@ main ()
   // Don't get caught out by empty JSON string.
   //
   {
-    parser p("[\"\", \"hello\"]", "test");
+    parser p ("[\"\", \"hello\"]", "test");
     assert (p.next () == event::begin_array);
     assert (p.next () == event::string);
     assert (p.value () == "");
