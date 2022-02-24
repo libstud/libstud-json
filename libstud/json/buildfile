@@ -1,4 +1,6 @@
-lib{stud-json}: {hxx ixx txx cxx}{** -version} hxx{version}
+import intf_libs = libstud-optional%lib{stud-optional}
+
+lib{stud-json}: {hxx ixx txx cxx}{** -version} hxx{version} $intf_libs
 
 # The pdjson.c file is included into parser.cxx so exclude it from the
 # compilation. Note that pdjson.h must be installed since it is included in
@@ -29,7 +31,7 @@ objs{*}: cxx.poptions += -DLIBSTUD_JSON_SHARED_BUILD
 lib{stud-json}:
 {
   cxx.export.poptions = "-I$out_root" "-I$src_root"
-  cxx.export.libs = $int_libs
+  cxx.export.libs = $intf_libs
 }
 
 liba{stud-json}: cxx.export.poptions += -DLIBSTUD_JSON_STATIC

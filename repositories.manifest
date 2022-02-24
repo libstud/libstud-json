@@ -1,0 +1,6 @@
+: 1
+summary: libstud-json project repository
+
+:
+role: prerequisite
+location: ../libstud-optional.git##HEAD

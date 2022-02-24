@@ -5,9 +5,10 @@
 #include <cstddef>   // size_t
 #include <cstdint>   // uint64_t
 #include <utility>   // pair
-#include <optional>
 #include <exception> // exception_ptr
 #include <stdexcept> // invalid_argument
+
+#include <libstud/optional.hxx> // stud::optional is std::optional or similar.
 
 #include <libstud/json/event.hxx>
 
@@ -17,8 +18,8 @@
 
 namespace stud
 {
-  // Using the RFC8259 terminology (JSON (input) text, JSON value, object
-  // member).
+  // Using the RFC8259 terminology: JSON (input) text, JSON value, object
+  // member.
   //
   namespace json
   {
@@ -202,7 +203,7 @@ namespace stud
       // value, the multi-value mode will accept zero values in which case a
       // single nullopt is returned.
       //
-      std::optional<event>
+      optional<event>
       next ();
 
       // The range-based for loop support.
@@ -239,7 +240,7 @@ namespace stud
       struct iterator;
 
       iterator begin () {return iterator (this, next ());}
-      iterator end ()   {return iterator (nullptr, std::nullopt);}
+      iterator end ()   {return iterator (nullptr, nullopt);}
 
       // Return the next event without considering it parsed. In other words,
       // after this call, any subsequent calls to peek() and the next call to
@@ -251,7 +252,7 @@ namespace stud
       // next(). The peeked values, however, can be accessed in the raw form
       // using data().
       //
-      std::optional<event>
+      optional<event>
       peek ();
 
       // Event data.
@@ -316,7 +317,7 @@ namespace stud
         using value_type = event;
 
         explicit
-        iterator (parser* p = nullptr, std::optional<event> e = std::nullopt)
+        iterator (parser* p = nullptr, optional<event> e = nullopt)
             : p_ (p), e_ (e) {}
 
         event operator* () const {return *e_;}
@@ -329,7 +330,7 @@ namespace stud
 
       private:
         parser* p_;
-        std::optional<event> e_;
+        optional<event> e_;
       };
 
       struct stream
@@ -354,7 +355,7 @@ namespace stud
       // Note that the underlying parser state determines whether name or
       // value is returned when translating JSON_STRING.
       //
-      std::optional<event>
+      optional<event>
       translate (json_type) const noexcept;
 
       // Cache state (name/value) produced by the most recent call to
@@ -373,7 +374,7 @@ namespace stud
       // null).
       //
       static bool
-      value_event (std::optional<event>) noexcept;
+      value_event (optional<event>) noexcept;
 
       stream stream_;
 
@@ -387,8 +388,8 @@ namespace stud
       std::string value_;                      bool value_p_    = false;
       std::uint64_t line_, column_, position_; bool location_p_ = false;
 
-      std::optional<json_type> parsed_; // Current parsed event if any.
-      std::optional<json_type> peeked_; // Current peeked event if any.
+      optional<json_type> parsed_; // Current parsed event if any.
+      optional<json_type> peeked_; // Current peeked event if any.
 
       ::json_stream impl_[1];
 

@@ -6,9 +6,10 @@
 #include <vector>
 #include <cstddef>     // size_t, nullptr_t
 #include <utility>     // pair
-#include <optional>
 #include <stdexcept>   // invalid_argument
 #include <type_traits> // enable_if, is_*
+
+#include <libstud/optional.hxx> // stud::optional is std::optional or similar.
 
 #include <libstud/json/event.hxx>
 
@@ -16,8 +17,8 @@
 
 namespace stud
 {
-  // Using the RFC8259 terminology (JSON (output) text, JSON value, object
-  // member).
+  // Using the RFC8259 terminology: JSON (output) text, JSON value, object
+  // member.
   //
   namespace json
   {
@@ -34,12 +35,12 @@ namespace stud
         invalid_value
       };
 
-      invalid_json_output (std::optional<event_type> event,
+      invalid_json_output (optional<event_type> event,
                            error_code code,
                            const char* description,
                            std::size_t offset = std::string::npos);
 
-      invalid_json_output (std::optional<event_type> event,
+      invalid_json_output (optional<event_type> event,
                            error_code code,
                            const std::string& description,
                            std::size_t offset = std::string::npos);
@@ -48,9 +49,9 @@ namespace stud
       // offset points to the offending byte (for example, the beginning of an
       // invalid UTF-8 byte sequence). Otherwise, offset is string::npos.
       //
-      std::optional<event_type> event;
-      error_code                code;
-      std::size_t               offset;
+      optional<event_type> event;
+      error_code           code;
+      std::size_t          offset;
     };
 
     // The serializer makes sure the resulting JSON is syntactically but not
@@ -275,7 +276,7 @@ namespace stud
       //   s.next (nullopt); // End of value sequence.
       //
       bool
-      next (std::optional<event> event,
+      next (optional<event> event,
             std::pair<const char*, std::size_t> value = {},
             bool check = true);
 

@@ -3,7 +3,7 @@ namespace stud
   namespace json
   {
     inline invalid_json_output::
-    invalid_json_output (std::optional<event_type> e,
+    invalid_json_output (optional<event_type> e,
                          error_code c,
                          const char* d,
                          std::size_t o)
@@ -12,7 +12,7 @@ namespace stud
     }
 
     inline invalid_json_output::
-    invalid_json_output (std::optional<event_type> e,
+    invalid_json_output (optional<event_type> e,
                          error_code c,
                          const std::string& d,
                          std::size_t o)

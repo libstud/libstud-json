@@ -1,7 +1,9 @@
 #include <limits>
+#include <cstddef> // size_t
 #include <cstring> // memcmp()
 #include <sstream>
 
+#include <libstud/optional.hxx>
 #include <libstud/json/serializer.hxx>
 
 #undef NDEBUG
@@ -22,6 +24,9 @@ overflow (void*, event, buffer_serializer::buffer& b, size_t)
 int
 main ()
 {
+  using stud::optional;
+  using stud::nullopt;
+
   using error = invalid_json_output::error_code;
 
   // Return true if a call to s.next () with these arguments throws an
@@ -29,8 +34,8 @@ main ()
   //
   auto next_throws = [] (error ec,
                          buffer_serializer& s,
-                         std::optional<event> e,
-                         std::pair<const char*, std::size_t> val = {},
+                         optional<event> e,
+                         pair<const char*, size_t> val = {},
                          bool check = true)
   {
     try

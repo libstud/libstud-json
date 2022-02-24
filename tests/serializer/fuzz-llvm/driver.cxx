@@ -23,6 +23,7 @@
 #include <cstring>
 #include <iostream>
 
+#include <libstud/optional.hxx>
 #include <libstud/json/serializer.hxx>
 
 #undef NDEBUG
@@ -68,6 +69,8 @@ valueless (uint8_t e) noexcept
 extern "C" int
 LLVMFuzzerTestOneInput (const uint8_t* data, size_t size)
 {
+  using stud::optional;
+
   // Note that libFuzzer will invoke this function once with empty input
   // before starting the fuzzing run.
   //

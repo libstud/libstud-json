@@ -349,7 +349,7 @@ namespace stud
       rethrow_exception (move (stream_.exception));
     }
 
-    std::optional<event> parser::
+    optional<event> parser::
     translate (json_type e) const noexcept
     {
       switch (e)
@@ -385,7 +385,7 @@ namespace stud
     cache_parsed_data ()
     {
       name_p_ = value_p_ = false;
-      if (const std::optional<event> e = translate (*parsed_))
+      if (const optional<event> e = translate (*parsed_))
       {
         if (e == event::name)
         {
@@ -410,7 +410,7 @@ namespace stud
     }
 
     bool parser::
-    value_event (std::optional<event> e) noexcept
+    value_event (optional<event> e) noexcept
     {
       if (!e)
         return false;

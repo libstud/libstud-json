@@ -10,8 +10,7 @@ changes-file: NEWS
 url: https://github.com/libstud/libstud-json
 email: libstud-authors@build2.org
 build-warning-email: libstud-authors@build2.org
-# The <optional> header is unavailable in some legacy
-# configurations.
-#builds: all
-depends: * build2 >= 0.13.0
-depends: * bpkg >= 0.13.0
+builds: all
+depends: * build2 >= 0.14.0
+depends: * bpkg >= 0.14.0
+depends: libstud-optional >= 0.1.0-
