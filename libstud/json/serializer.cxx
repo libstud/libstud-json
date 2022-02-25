@@ -363,7 +363,9 @@ namespace stud
         if (overflow_ == nullptr)
           return false;
 
-        overflow_ (data_, e, buf_, size + extra - cap);
+        extra += size;
+        extra -= cap;
+        overflow_ (data_, e, buf_, extra > min ? extra : min);
         cap = buf_.capacity - buf_.size;
 
         return cap >= min;
