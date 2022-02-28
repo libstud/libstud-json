@@ -4,6 +4,36 @@
 
 #include <istream>
 
+// There is an issue (segfault) with using std::current_exception() and
+// std::rethrow_exception() with older versions of libc++ on Linux. While the
+// exact root cause hasn't been determined, the suspicion is that something
+// gets messed up if we "smuggle" std::exception_ptr through extern "C" call
+// frames (we cannot even destroy such an exception without a segfault). We
+// also could not determine in which version exactly this has been fixed but
+// we know that libc++ 6.0.0 doesn't appear to have this issue (though we are
+// not entirely sure the issue is (only) in libc++; libgcc_s could also be
+// involved).
+//
+// The workaround is to just catch (and note) the exception and then throw a
+// new instance of generic std::istream::failure. In order not to drag the
+// below test into the header, we wrap exception_ptr with optional<> and use
+// NULL to indicate the presence of the exception when the workaround is
+// required.
+//
+// Note that if/when we drop this workaround, we should also get rid of
+// optional<> in stream::exception member.
+//
+#undef LIBSTUD_JSON_NO_EXCEPTION_PTR
+
+#if defined (__linux__) && defined(__clang__)
+#  if __has_include(<__config>)
+#    include <__config> // _LIBCPP_VERSION
+#    if _LIBCPP_VERSION < 6000
+#      define LIBSTUD_JSON_NO_EXCEPTION_PTR 1
+#    endif
+#  endif
+#endif
+
 namespace stud
 {
   namespace json
@@ -37,7 +67,11 @@ namespace stud
         }
         catch (...)
         {
+#ifndef LIBSTUD_JSON_NO_EXCEPTION_PTR
           s.exception = current_exception ();
+#else
+          s.exception = nullptr;
+#endif
         }
       }
 
@@ -59,7 +93,11 @@ namespace stud
         }
         catch (...)
         {
+#ifndef LIBSTUD_JSON_NO_EXCEPTION_PTR
           s.exception = current_exception ();
+#else
+          s.exception = nullptr;
+#endif
         }
       }
 
@@ -72,7 +110,7 @@ namespace stud
     parser::
     parser (istream& is, const char* n, bool mv, const char* sep) noexcept
         : input_name (n),
-          stream_ {&is, nullptr},
+          stream_ {&is, nullopt},
           multi_value_ (mv),
           separators_ (sep),
           raw_s_ (nullptr),
@@ -89,7 +127,7 @@ namespace stud
             bool mv,
             const char* sep) noexcept
         : input_name (n),
-          stream_ {nullptr, nullptr},
+          stream_ {nullptr, nullopt},
           multi_value_ (mv),
           separators_ (sep),
           raw_s_ (nullptr),
@@ -241,8 +279,8 @@ namespace stud
       {
         if (skip_separators ().second == EOF && stream_.is != nullptr)
         {
-          if (stream_.exception != nullptr) goto fail_rethrow;
-          if (stream_.is->fail ())          goto fail_stream;
+          if (stream_.exception)   goto fail_rethrow;
+          if (stream_.is->fail ()) goto fail_stream;
         }
       }
 
@@ -252,8 +290,8 @@ namespace stud
       //
       if (stream_.is != nullptr)
       {
-        if (stream_.exception != nullptr) goto fail_rethrow;
-        if (stream_.is->fail ())          goto fail_stream;
+        if (stream_.exception)   goto fail_rethrow;
+        if (stream_.is->fail ()) goto fail_stream;
       }
 
       // There are two ways to view separation between two values: as following
@@ -291,8 +329,8 @@ namespace stud
 
             if (p.second == EOF && stream_.is != nullptr)
             {
-              if (stream_.exception != nullptr) goto fail_rethrow;
-              if (stream_.is->fail ())          goto fail_stream;
+              if (stream_.exception)   goto fail_rethrow;
+              if (stream_.is->fail ()) goto fail_stream;
             }
 
             // Note that we don't require separators after the last value.
@@ -346,7 +384,11 @@ namespace stud
           "unable to read JSON input text");
 
     fail_rethrow:
-      rethrow_exception (move (stream_.exception));
+#ifndef LIBSTUD_JSON_NO_EXCEPTION_PTR
+      rethrow_exception (move (*stream_.exception));
+#else
+      throw istream::failure ("unable to read");
+#endif
     }
 
     optional<event> parser::

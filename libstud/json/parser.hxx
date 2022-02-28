@@ -335,8 +335,8 @@ namespace stud
 
       struct stream
       {
-        std::istream*      is;
-        std::exception_ptr exception;
+        std::istream*                is;
+        optional<std::exception_ptr> exception;
       };
 
       [[noreturn]] void
