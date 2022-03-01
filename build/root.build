@@ -7,7 +7,11 @@ ixx{*}: extension = ixx
 txx{*}: extension = txx
 cxx{*}: extension = cxx
 
-using c
+# Assume headers are importable unless stated otherwise.
+#
+hxx{*}: cxx.importable = true
+
+using c # For the c{} target type.
 
 if ($cxx.target.system == 'win32-msvc')
   cc.poptions += -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS
