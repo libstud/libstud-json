@@ -13,4 +13,4 @@ build-warning-email: libstud-authors@build2.org
 builds: all
 depends: * build2 >= 0.14.0
 depends: * bpkg >= 0.14.0
-depends: libstud-optional >= 0.1.0-
+depends: libstud-optional ^1.0.0
