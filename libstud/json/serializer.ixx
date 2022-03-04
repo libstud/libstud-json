@@ -151,6 +151,21 @@ namespace stud
       next (event::null);
     }
 
+    inline void buffer_serializer::
+    value_json_text (const char* v)
+    {
+      // Use event::number (which doesn't involve any quoting) with a disabled
+      // check.
+      //
+      next (event::number, {v, strlen (v)}, false /* check */);
+    }
+
+    inline void buffer_serializer::
+    value_json_text (const std::string& v)
+    {
+      next (event::number, {v.c_str (), v.size ()}, false /* check */);
+    }
+
     inline size_t buffer_serializer::
     to_chars (char* b, size_t s, int v)
     {

@@ -544,5 +544,17 @@ main ()
       s.value (cp);
       assert (b == "null");
     }
+
+    // Pre-serialized JSON value.
+    //
+    {
+      string b;
+      buffer_serializer s (b, 0);
+      s.begin_array ();
+      s.value_json_text ("{\"a\":1}");
+      s.value_json_text ("{\"a\":2}");
+      s.end_array ();
+      assert (b == "[{\"a\":1},{\"a\":2}]");
+    }
   }
 }

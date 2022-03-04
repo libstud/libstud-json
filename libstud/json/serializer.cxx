@@ -283,6 +283,8 @@ namespace stud
           // Fall through.
         case event::number:
           {
+            // Note: this event is also used by value_json_text().
+
             if (st != nullptr && name_expected (*st))
               goto fail_unexpected_event;
 
