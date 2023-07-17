@@ -10,11 +10,9 @@ implementations. In particular, pull-style parsers are not very common, and we
 couldn't find any C++ implementations that also satisfy the above
 requirements.
 
-Typical parser usage:
+Typical parser usage (low-level API):
 
 ```c++
-#include <iostream>
-
 #include <libstud/json/parser.hxx>
 
 int main ()
@@ -38,11 +36,36 @@ int main ()
       }
     case event::number:
       {
-        int n (p.value<int> ());
+        std::int64_t n (p.value<std::int64_t> ());
         // ...
       }
     }
   }
+}
+```
+
+Or using the higher-level API to parse a specific JSON vocabulary:
+
+```c++
+#include <libstud/json/parser.hxx>
+
+int main ()
+{
+  using namespace stud::json;
+
+  parser p (std::cin, "<stdin>");
+
+  p.next_expect (event::begin_object);
+  {
+    std::string planet (p.next_expect_member_string ("planet"));
+
+    p.next_expect_member_array ("measurements");
+    while (p.next_expect (event::number, event::end_array))
+    {
+      std::uint64 m (p.value<std::uint64> ());
+    }
+  }
+  p.next_expect (event::end_object);
 }
 ```
 
@@ -53,8 +76,6 @@ complete list of events.
 Typical serializer usage:
 
 ```c++
-#include <iostream>
-
 #include <libstud/json/serializer.hxx>
 
 int main ()
@@ -64,11 +85,12 @@ int main ()
   stream_serializer s (std::cout);
 
   s.begin_object ();
-  s.member ("string", "abc");
-  s.member_name ("array");
+  s.member ("planet", "Venus");
+  s.member_name ("measurement");
   s.begin_array ();
   s.value (123);
-  s.value (true);
+  s.value (234);
+  s.value (345);
   s.end_array ();
   s.end_object ();
 }

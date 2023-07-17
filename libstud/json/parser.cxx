@@ -171,6 +171,149 @@ namespace stud
       return translate (*peeked_);
     }
 
+    static inline const char*
+    event_name (event e)
+    {
+      switch (e)
+      {
+      case event::begin_object: return "beginning of object";
+      case event::end_object:   return "end of object";
+      case event::begin_array:  return "beginning of array";
+      case event::end_array:    return "end of array";
+      case event::name:         return "member name";
+      case event::string:       return "string value";
+      case event::number:       return "numeric value";
+      case event::boolean:      return "boolean value";
+      case event::null:         return "null value";
+      }
+
+      return "";
+    }
+
+    bool parser::
+    next_expect (event p, optional<event> s)
+    {
+      optional<event> e (next ());
+      bool r;
+      if (e && ((r = *e == p) || (s && *e == *s)))
+        return r;
+
+      string d ("expected ");
+      d += event_name (p);
+
+      if (s)
+      {
+        d += " or ";
+        d += event_name (*s);
+      }
+
+      if (e)
+      {
+        d += " instead of ";
+        d += event_name (*e);
+      }
+
+      throw invalid_json_input (input_name != nullptr ? input_name : "",
+                                line (),
+                                column (),
+                                position (),
+                                move (d));
+    }
+
+    void parser::
+    next_expect_name (const char* n, bool su)
+    {
+      for (;;)
+      {
+        next_expect (event::name);
+
+        if (name () == n)
+          return;
+
+        if (!su)
+          break;
+
+        next_expect_value_skip ();
+      }
+
+      string d ("expected object member name '");
+      d += n;
+      d += "' instead of '";
+      d += name ();
+      d += '\'';
+
+      throw invalid_json_input (input_name != nullptr ? input_name : "",
+                                line (),
+                                column (),
+                                position (),
+                                move (d));
+    }
+
+    void parser::
+    next_expect_value_skip ()
+    {
+      optional<event> e (next ());
+
+      if (e)
+      {
+        switch (*e)
+        {
+        case event::begin_object:
+        case event::begin_array:
+          {
+            // Skip until matching end_object/array keeping track of nesting.
+            // We are going to rely on the fact that we should either get such
+            // an event or next() should throw.
+            //
+            event be (*e);
+            event ee (be == event::begin_object
+                      ? event::end_object
+                      : event::end_array);
+
+            for (size_t n (0);; )
+            {
+              event e (*next ());
+
+              if (e == ee)
+              {
+                if (n == 0)
+                  break;
+
+                --n;
+              }
+              else if (e == be)
+                ++n;
+            }
+
+            return;
+          }
+        case event::string:
+        case event::number:
+        case event::boolean:
+        case event::null:
+          return;
+        case event::name:
+        case event::end_object:
+        case event::end_array:
+          break;
+        }
+      }
+
+      string d ("expected value");
+
+      if (e)
+      {
+        d += " instead of ";
+        d += event_name (*e);
+      }
+
+      throw invalid_json_input (input_name != nullptr ? input_name : "",
+                                line (),
+                                column (),
+                                position (),
+                                move (d));
+    }
+
     std::uint64_t parser::
     line () const noexcept
     {

@@ -212,5 +212,341 @@ namespace stud
 
       return parse_value<T> (value_.data (), value_.size (), *this);
     }
+
+    inline void parser::
+    next_expect_name (const std::string& n, bool su)
+    {
+      next_expect_name (n.c_str (), su);
+    }
+
+    // next_expect_<type>()
+    //
+    inline std::string& parser::
+    next_expect_string ()
+    {
+      next_expect (event::string);
+      return value ();
+    }
+
+    template <typename T>
+    inline T parser::
+    next_expect_string ()
+    {
+      next_expect (event::string);
+      return value<T> ();
+    }
+
+    inline std::string& parser::
+    next_expect_number ()
+    {
+      next_expect (event::number);
+      return value ();
+    }
+
+    template <typename T>
+    inline T parser::
+    next_expect_number ()
+    {
+      next_expect (event::number);
+      return value<T> ();
+    }
+
+    inline std::string& parser::
+    next_expect_boolean ()
+    {
+      next_expect (event::boolean);
+      return value ();
+    }
+
+    template <typename T>
+    inline T parser::
+    next_expect_boolean ()
+    {
+      next_expect (event::boolean);
+      return value<T> ();
+    }
+
+    // next_expect_<type>_null()
+    //
+    inline std::string* parser::
+    next_expect_string_null ()
+    {
+      return next_expect (event::string, event::null) ? &value () : nullptr;
+    }
+
+    template <typename T>
+    inline optional<T> parser::
+    next_expect_string_null ()
+    {
+      return next_expect (event::string, event::null)
+        ? optional<T> (value<T> ())
+        : nullopt;
+    }
+
+    inline std::string* parser::
+    next_expect_number_null ()
+    {
+      return next_expect (event::number, event::null) ? &value () : nullptr;
+    }
+
+    template <typename T>
+    inline optional<T> parser::
+    next_expect_number_null ()
+    {
+      return next_expect (event::number, event::null)
+        ? optional<T> (value<T> ())
+        : nullopt;
+    }
+
+    inline std::string* parser::
+    next_expect_boolean_null ()
+    {
+      return next_expect (event::boolean, event::null) ? &value () : nullptr;
+    }
+
+    template <typename T>
+    inline optional<T> parser::
+    next_expect_boolean_null ()
+    {
+      return next_expect (event::boolean, event::null)
+        ? optional<T> (value<T> ())
+        : nullopt;
+    }
+
+    // next_expect_member_string()
+    //
+    inline std::string& parser::
+    next_expect_member_string (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect_string ();
+    }
+
+    inline std::string& parser::
+    next_expect_member_string (const std::string& n, bool su)
+    {
+      return next_expect_member_string (n.c_str (), su);
+    }
+
+    template <typename T>
+    inline T parser::
+    next_expect_member_string (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect_string<T> ();
+    }
+
+    template <typename T>
+    inline T parser::
+    next_expect_member_string (const std::string& n, bool su)
+    {
+      return next_expect_member_string<T> (n.c_str (), su);
+    }
+
+    // next_expect_member_number()
+    //
+    inline std::string& parser::
+    next_expect_member_number (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect_number ();
+    }
+
+    inline std::string& parser::
+    next_expect_member_number (const std::string& n, bool su)
+    {
+      return next_expect_member_number (n.c_str (), su);
+    }
+
+    template <typename T>
+    inline T parser::
+    next_expect_member_number (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect_number<T> ();
+    }
+
+    template <typename T>
+    inline T parser::
+    next_expect_member_number (const std::string& n, bool su)
+    {
+      return next_expect_member_number<T> (n.c_str (), su);
+    }
+
+    // next_expect_member_boolean()
+    //
+    inline std::string& parser::
+    next_expect_member_boolean (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect_boolean ();
+    }
+
+    inline std::string& parser::
+    next_expect_member_boolean (const std::string& n, bool su)
+    {
+      return next_expect_member_boolean (n.c_str (), su);
+    }
+
+    template <typename T>
+    inline T parser::
+    next_expect_member_boolean (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect_boolean<T> ();
+    }
+
+    template <typename T>
+    inline T parser::
+    next_expect_member_boolean (const std::string& n, bool su)
+    {
+      return next_expect_member_boolean<T> (n.c_str (), su);
+    }
+
+    // next_expect_member_string_null()
+    //
+    inline std::string* parser::
+    next_expect_member_string_null (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect_string_null ();
+    }
+
+    inline std::string* parser::
+    next_expect_member_string_null (const std::string& n, bool su)
+    {
+      return next_expect_member_string_null (n.c_str (), su);
+    }
+
+    template <typename T>
+    inline optional<T> parser::
+    next_expect_member_string_null (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect_string_null<T> ();
+    }
+
+    template <typename T>
+    inline optional<T> parser::
+    next_expect_member_string_null (const std::string& n, bool su)
+    {
+      return next_expect_member_string_null<T> (n.c_str (), su);
+    }
+
+    // next_expect_member_number_null()
+    //
+    inline std::string* parser::
+    next_expect_member_number_null (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect_number_null ();
+    }
+
+    inline std::string* parser::
+    next_expect_member_number_null (const std::string& n, bool su)
+    {
+      return next_expect_member_number_null (n.c_str (), su);
+    }
+
+    template <typename T>
+    inline optional<T> parser::
+    next_expect_member_number_null (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect_number_null<T> ();
+    }
+
+    template <typename T>
+    inline optional<T> parser::
+    next_expect_member_number_null (const std::string& n, bool su)
+    {
+      return next_expect_member_number_null<T> (n.c_str (), su);
+    }
+
+    // next_expect_member_boolean_null()
+    //
+    inline std::string* parser::
+    next_expect_member_boolean_null (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect_boolean_null ();
+    }
+
+    inline std::string* parser::
+    next_expect_member_boolean_null (const std::string& n, bool su)
+    {
+      return next_expect_member_boolean_null (n.c_str (), su);
+    }
+
+    template <typename T>
+    inline optional<T> parser::
+    next_expect_member_boolean_null (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect_boolean_null<T> ();
+    }
+
+    template <typename T>
+    inline optional<T> parser::
+    next_expect_member_boolean_null (const std::string& n, bool su)
+    {
+      return next_expect_member_boolean_null<T> (n.c_str (), su);
+    }
+
+    // next_expect_member_object[_null]()
+    //
+    inline void parser::
+    next_expect_member_object (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      next_expect (event::begin_object);
+    }
+
+    inline void parser::
+    next_expect_member_object (const std::string& n, bool su)
+    {
+      next_expect_member_object (n.c_str (), su);
+    }
+
+    inline bool parser::
+    next_expect_member_object_null (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect (event::begin_object, event::null);
+    }
+
+    inline bool parser::
+    next_expect_member_object_null (const std::string& n, bool su)
+    {
+      return next_expect_member_object_null (n.c_str (), su);
+    }
+
+    // next_expect_member_array[_null]()
+    //
+    inline void parser::
+    next_expect_member_array (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      next_expect (event::begin_array);
+    }
+
+    inline void parser::
+    next_expect_member_array (const std::string& n, bool su)
+    {
+      next_expect_member_array (n.c_str (), su);
+    }
+
+    inline bool parser::
+    next_expect_member_array_null (const char* n, bool su)
+    {
+      next_expect_name (n, su);
+      return next_expect (event::begin_array, event::null);
+    }
+
+    inline bool parser::
+    next_expect_member_array_null (const std::string& n, bool su)
+    {
+      return next_expect_member_array_null (n.c_str (), su);
+    }
   }
 }

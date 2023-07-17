@@ -168,6 +168,9 @@ namespace stud
       parser& operator= (parser&&) = delete;
       parser& operator= (const parser&) = delete;
 
+      // Event iteration.
+      //
+
       // Return the next event or nullopt if end of input is reached.
       //
       // In the single-value parsing mode (default) the parsing code could
@@ -255,7 +258,8 @@ namespace stud
       optional<event>
       peek ();
 
-      // Event data.
+
+      // Event data access.
       //
 
       // Return the object member name.
@@ -290,6 +294,299 @@ namespace stud
       //
       std::pair<const char*, std::size_t>
       data () const {return std::make_pair (raw_s_, raw_n_);}
+
+
+      // Higher-level API suitable for parsing specific JSON vocabularies.
+      //
+      // The API summary:
+      //
+      // void next_expect (event);
+      // bool next_expect (event primary, event secondary);
+      //
+      // void next_expect_name (string name, bool skip_unknown = false);
+      //
+      // std::string& next_expect_string    ();
+      // T            next_expect_string<T> ();
+      // std::string& next_expect_number    ();
+      // T            next_expect_number<T> ();
+      // std::string& next_expect_boolean   ();
+      // T            next_expect_boolean<T>();
+      //
+      // std::string* next_expect_string_null    ();
+      // optional<T>  next_expect_string_null<T> ();
+      // std::string* next_expect_number_null    ();
+      // optional<T>  next_expect_number_null<T> ();
+      // std::string* next_expect_boolean_null   ();
+      // optional<T>  next_expect_boolean_null<T>();
+      //
+      // std::string& next_expect_member_string    (string name, bool = false);
+      // T            next_expect_member_string<T> (string name, bool = false);
+      // std::string& next_expect_member_number    (string name, bool = false);
+      // T            next_expect_member_number<T> (string name, bool = false);
+      // std::string& next_expect_member_boolean   (string name, bool = false);
+      // T            next_expect_member_boolean<T>(string name, bool = false);
+      //
+      // std::string* next_expect_member_string_null    (string, bool = false);
+      // optional<T>  next_expect_member_string_null<T> (string, bool = false);
+      // std::string* next_expect_member_number_null    (string, bool = false);
+      // optional<T>  next_expect_member_number_null<T> (string, bool = false);
+      // std::string* next_expect_member_boolean_null   (string, bool = false);
+      // optional<T>  next_expect_member_boolean_null<T>(string, bool = false);
+      //
+      // void next_expect_member_object     (string name, bool = false);
+      // bool next_expect_member_object_null(string name, bool = false);
+      //
+      // void next_expect_member_array     (string name, bool = false);
+      // bool next_expect_member_array_null(string name, bool = false);
+      //
+      // void next_expect_value_skip();
+
+      // Get the next event and make sure that it's what's expected: primary
+      // or, if specified, secondary event. If it is not either, then throw
+      // invalid_json_input with appropriate description. Return true if it is
+      // primary.
+      //
+      // The secondary expected event is primarily useful for handling
+      // optional members. For example:
+      //
+      //     while (p.next_expect (event::name, event::end_object))
+      //     {
+      //       // Handle object member.
+      //     }
+      //
+      // Or homogeneous arrays:
+      //
+      //     while (p.next_expect (event::string, event::end_array))
+      //     {
+      //       // Handle array element.
+      //     }
+      //
+      // Or values that can be null:
+      //
+      //     if (p.next_expect (event::begin_object, event::null))
+      //     {
+      //       // Parse object.
+      //     }
+      //
+      bool
+      next_expect (event primary, optional<event> secondary = nullopt);
+
+      // Get the next event and make sure it is event::name and the object
+      // member matches the specified name. If either is not, then throw
+      // invalid_json_input with appropriate description. If skip_unknown is
+      // true, then skip over unknown member names until a match is found.
+      //
+      void
+      next_expect_name (const char* name, bool skip_unknown = false);
+
+      void
+      next_expect_name (const std::string&, bool = false);
+
+      // Get the next event and make sure it is event::<type> returning its
+      // value similar to the value() functions. If it is not, then throw
+      // invalid_json_input with appropriate description.
+      //
+      std::string&
+      next_expect_string ();
+
+      template <typename T>
+      T
+      next_expect_string ();
+
+      std::string&
+      next_expect_number ();
+
+      template <typename T>
+      T
+      next_expect_number ();
+
+      std::string&
+      next_expect_boolean ();
+
+      template <typename T>
+      T
+      next_expect_boolean ();
+
+      // Similar to next_expect_<type>() but in addition to event::<type> also
+      // allow event::null, in which case returning no value.
+      //
+      std::string*
+      next_expect_string_null ();
+
+      template <typename T>
+      optional<T>
+      next_expect_string_null ();
+
+      std::string*
+      next_expect_number_null ();
+
+      template <typename T>
+      optional<T>
+      next_expect_number_null ();
+
+      std::string*
+      next_expect_boolean_null ();
+
+      template <typename T>
+      optional<T>
+      next_expect_boolean_null ();
+
+      // Call next_expect_name() followed by next_expect_<type>[_null]()
+      // returning its result. In other words, parse the entire object member
+      // with the specifed name and of type <type>, returning its value.
+
+      // next_expect_member_string()
+      //
+      std::string&
+      next_expect_member_string (const char* name, bool skip_unknown = false);
+
+      std::string&
+      next_expect_member_string (const std::string&, bool = false);
+
+      template <typename T>
+      T
+      next_expect_member_string (const char*, bool = false);
+
+      template <typename T>
+      T
+      next_expect_member_string (const std::string&, bool = false);
+
+      // next_expect_member_number()
+      //
+      std::string&
+      next_expect_member_number (const char* name, bool skip_unknown = false);
+
+      std::string&
+      next_expect_member_number (const std::string&, bool = false);
+
+      template <typename T>
+      T
+      next_expect_member_number (const char*, bool = false);
+
+      template <typename T>
+      T
+      next_expect_member_number (const std::string&, bool = false);
+
+      // next_expect_member_boolean()
+      //
+      std::string&
+      next_expect_member_boolean (const char* name, bool skip_unknown = false);
+
+      std::string&
+      next_expect_member_boolean (const std::string&, bool = false);
+
+      template <typename T>
+      T
+      next_expect_member_boolean (const char*, bool = false);
+
+      template <typename T>
+      T
+      next_expect_member_boolean (const std::string&, bool = false);
+
+      // next_expect_member_string_null()
+      //
+      std::string*
+      next_expect_member_string_null (const char*, bool = false);
+
+      std::string*
+      next_expect_member_string_null (const std::string&, bool = false);
+
+      template <typename T>
+      optional<T>
+      next_expect_member_string_null (const char*, bool = false);
+
+      template <typename T>
+      optional<T>
+      next_expect_member_string_null (const std::string&, bool = false);
+
+      // next_expect_member_number_null()
+      //
+      std::string*
+      next_expect_member_number_null (const char*, bool = false);
+
+      std::string*
+      next_expect_member_number_null (const std::string&, bool = false);
+
+      template <typename T>
+      optional<T>
+      next_expect_member_number_null (const char*, bool = false);
+
+      template <typename T>
+      optional<T>
+      next_expect_member_number_null (const std::string&, bool = false);
+
+      // next_expect_member_boolean_null()
+      //
+      std::string*
+      next_expect_member_boolean_null (const char*, bool = false);
+
+      std::string*
+      next_expect_member_boolean_null (const std::string&, bool = false);
+
+      template <typename T>
+      optional<T>
+      next_expect_member_boolean_null (const char*, bool = false);
+
+      template <typename T>
+      optional<T>
+      next_expect_member_boolean_null (const std::string&, bool = false);
+
+      // Call next_expect_name() followed by next_expect(event::begin_object).
+      // In the _null version also allow event::null, in which case return
+      // false.
+      //
+      void
+      next_expect_member_object (const char* name, bool skip_unknown = false);
+
+      void
+      next_expect_member_object (const std::string&, bool = false);
+
+      bool
+      next_expect_member_object_null (const char*, bool = false);
+
+      bool
+      next_expect_member_object_null (const std::string&, bool = false);
+
+      // Call next_expect_name() followed by next_expect(event::begin_array).
+      // In the _null version also allow event::null, in which case return
+      // false.
+      //
+      void
+      next_expect_member_array (const char* name, bool skip_unknown = false);
+
+      void
+      next_expect_member_array (const std::string&, bool = false);
+
+      bool
+      next_expect_member_array_null (const char*, bool = false);
+
+      bool
+      next_expect_member_array_null (const std::string&, bool = false);
+
+      // Get the next event and make sure it is the beginning of a value
+      // (begin_object, begin_array, string, number, boolean, null). If it is
+      // not, then throw invalid_json_input with appropriate description.
+      // Otherwise, skip until the end of the value, recursively in case of
+      // object and array.
+      //
+      // This function is primarily useful for skipping unknown object
+      // members, for example:
+      //
+      //     while (p.next_expect (event::name, event::end_object))
+      //     {
+      //       if (p.name () == "known")
+      //       {
+      //         // Handle known member.
+      //       }
+      //       else
+      //         p.next_expect_value_skip ();
+      //     }
+      //
+      void
+      next_expect_value_skip ();
+
+      // Parsing location.
+      //
 
       // Return the line number (1-based) corresponding to the most recently
       // parsed event or 0 if nothing has been parsed yet.
