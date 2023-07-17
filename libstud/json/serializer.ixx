@@ -1,3 +1,5 @@
+#include <cstring> // strlen()
+
 namespace stud
 {
   namespace json
@@ -72,7 +74,7 @@ namespace stud
     inline void buffer_serializer::
     member_name (const char* n, bool c)
     {
-      next (event::name, {n, n != nullptr ? strlen (n) : 0}, c);
+      next (event::name, {n, n != nullptr ? std::strlen (n) : 0}, c);
     }
 
     inline void buffer_serializer::
@@ -113,7 +115,7 @@ namespace stud
     value (const char* v, bool c)
     {
       if (v != nullptr)
-        next (event::string, {v, strlen (v)}, c);
+        next (event::string, {v, std::strlen (v)}, c);
       else
         next (event::null);
     }
@@ -157,7 +159,7 @@ namespace stud
       // Use event::number (which doesn't involve any quoting) with a disabled
       // check.
       //
-      next (event::number, {v, strlen (v)}, false /* check */);
+      next (event::number, {v, std::strlen (v)}, false /* check */);
     }
 
     inline void buffer_serializer::
