@@ -1,6 +1,6 @@
-#include <cstdio>               // snprintf
-#include <cstdarg>              // va_list
-#include <cstring>              // memcpy
+#include <cstdio>   // snprintf
+#include <cstdarg>  // va_list
+#include <cstring>  // memcpy
 #include <ostream>
 
 #include <libstud/json/serializer.hxx>

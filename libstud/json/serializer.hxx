@@ -163,8 +163,19 @@ namespace stud
 
       // Begin/end an object.
       //
+      // The member_begin_object() version is a shortcut for:
+      //
+      //     member_name (name, check);
+      //     begin_object ();
+      //
       void
       begin_object ();
+
+      void
+      member_begin_object (const char*, bool check = true);
+
+      void
+      member_begin_object (const std::string&, bool check = true);
 
       void
       end_object ();
@@ -195,8 +206,19 @@ namespace stud
 
       // Begin/end an array.
       //
+      // The member_begin_array() version is a shortcut for:
+      //
+      //     member_name (name, check);
+      //     begin_array ();
+      //
       void
       begin_array ();
+
+      void
+      member_begin_array (const char*, bool check = true);
+
+      void
+      member_begin_array (const std::string&, bool check = true);
 
       void
       end_array ();
@@ -231,7 +253,7 @@ namespace stud
       void
       value (std::nullptr_t);
 
-      // Serialize a pre-serialized JSON value.
+      // Serialize value as a pre-serialized JSON value.
       //
       // Note that the value is expected to be a valid (and suitable) UTF-8-
       // encoded JSON text. Note also that if pretty-printing is enabled,
