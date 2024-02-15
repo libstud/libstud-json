@@ -127,6 +127,24 @@ $* <'12a45' >'  1,  1: 12' 2>>EOE != 0
 <stdin>:1:3: error: expected end of text instead of byte 'a'
 EOE
 
+: end-of-text
+:
+{
+  # Note: suppress trailing newline in input.
+
+  : array
+  :
+  $* <:'[2' >- 2>>EOE != 0
+  <stdin>:1:2: error: unexpected end of text
+  EOE
+
+  : literal
+  :
+  $* <:'tru' 2>>EOE != 0
+  <stdin>:1:3: error: expected 'e' instead of end of text
+  EOE
+}
+
 : utf-8
 :
 {
