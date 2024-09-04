@@ -60,9 +60,9 @@ namespace stud
     //
     // Note that unlike the parser, the serializer is always in the multi-
     // value mode allowing the serialization of zero or more values. Note also
-    // that while values are separated with newlines, there is no trailing
-    // newline after the last (or only) value and the user is expected to add
-    // it manually if needed.
+    // that while values are by default separated with newlines, there is no
+    // trailing newline after the last (or only) value and the user is
+    // expected to add it manually, if needed.
     //
     // Also note that while RFC8259 recommends object members to have unique
     // names, the serializer does not enforce this.
@@ -70,19 +70,30 @@ namespace stud
     class LIBSTUD_JSON_SYMEXPORT buffer_serializer
     {
     public:
-      // Serialize to string growing it as necessary.
+      // Serialize to string growing it as necessary. Note that the result is
+      // appended to any existing data in the string.
       //
       // The indentation argument specifies the number of indentation spaces
       // that should be used for pretty-printing. If 0 is passed, no
       // pretty-printing is performed.
       //
-      explicit
-      buffer_serializer (std::string&, std::size_t indentation = 2);
-
-      // Serialize to vector of characters growing it as necessary.
+      // The multi_value_separator argument specifies the character sequence
+      // to use to separate multiple top-level values. NULL or empty string
+      // means no separator. Note that it is kept as a reference and so must
+      // outlive the serializer instance.
       //
       explicit
-      buffer_serializer (std::vector<char>&, std::size_t indentation = 2);
+      buffer_serializer (std::string&,
+                         std::size_t indentation = 2,
+                         const char* multi_value_separator = "\n");
+
+      // Serialize to vector of characters growing it as necessary. Note that
+      // the result is appended to any existing data in the vector.
+      //
+      explicit
+      buffer_serializer (std::vector<char>&,
+                         std::size_t indentation = 2,
+                         const char* multi_value_separator = "\n");
 
       // Serialize to a fixed array.
       //
@@ -94,7 +105,8 @@ namespace stud
       //
       template <std::size_t N>
       buffer_serializer (std::array<char, N>&, std::size_t& size,
-                         std::size_t indentation = 2);
+                         std::size_t indentation = 2,
+                         const char* multi_value_separator = "\n");
 
       // Serialize to a fixed buffer.
       //
@@ -105,7 +117,8 @@ namespace stud
       // next() call that reaches the limit will throw invalid_json_output.
       //
       buffer_serializer (void* buf, std::size_t& size, std::size_t capacity,
-                         std::size_t indentation = 2);
+                         std::size_t indentation = 2,
+                         const char* multi_value_separator = "\n");
 
       // The overflow function is called when the output buffer is out of
       // space. The extra argument is a hint indicating the extra space likely
@@ -150,7 +163,8 @@ namespace stud
                          overflow_function*,
                          flush_function*,
                          void* data,
-                         std::size_t indentation = 2);
+                         std::size_t indentation = 2,
+                         const char* multi_value_separator = "\n");
 
       // As above but the length of the output text written is tracked in the
       // size argument.
@@ -159,7 +173,8 @@ namespace stud
                          overflow_function*,
                          flush_function*,
                          void* data,
-                         std::size_t indentation = 2);
+                         std::size_t indentation = 2,
+                         const char* multi_value_separator = "\n");
 
       // Begin/end an object.
       //
@@ -386,6 +401,10 @@ namespace stud
       // The number of complete top-level values serialized thus far.
       //
       std::size_t values_ = 0;
+
+      // Multi-value separator.
+      //
+      const char* mv_separator_;
     };
 
     class LIBSTUD_JSON_SYMEXPORT stream_serializer: public buffer_serializer
@@ -398,7 +417,9 @@ namespace stud
       // Otherwise, those are reported as the invalid_json_output exception.
       //
       explicit
-      stream_serializer (std::ostream&, std::size_t indentation = 2);
+      stream_serializer (std::ostream&,
+                         std::size_t indentation = 2,
+                         const char* multi_value_separator = "\n");
 
     protected:
       char tmp_[4096];

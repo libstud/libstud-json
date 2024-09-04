@@ -1,6 +1,6 @@
 #include <cstdio>   // snprintf
 #include <cstdarg>  // va_list
-#include <cstring>  // memcpy
+#include <cstring>  // memcpy, strlen
 #include <ostream>
 
 #include <libstud/json/serializer.hxx>
@@ -38,23 +38,23 @@ namespace stud
     }
 
     buffer_serializer::
-    buffer_serializer (string& s, size_t i)
+    buffer_serializer (string& s, size_t i, const char* mvs)
         : buffer_serializer (const_cast<char*> (s.data ()), size_, s.size (),
                              dynarray_overflow<string>,
                              dynarray_flush<string>,
                              &s,
-                             i)
+                             i, mvs)
     {
       size_ = s.size ();
     }
 
     buffer_serializer::
-    buffer_serializer (vector<char>& v, size_t i)
+    buffer_serializer (vector<char>& v, size_t i, const char* mvs)
         : buffer_serializer (v.data (), size_, v.size (),
                              dynarray_overflow<vector<char>>,
                              dynarray_flush<vector<char>>,
                              &v,
-                             i)
+                             i, mvs)
     {
       size_ = v.size ();
     }
@@ -83,12 +83,12 @@ namespace stud
     }
 
     stream_serializer::
-    stream_serializer (ostream& os, size_t i)
+    stream_serializer (ostream& os, size_t i, const char* mvs)
         : buffer_serializer (tmp_, sizeof (tmp_),
                              ostream_overflow,
                              ostream_flush,
                              &os,
-                             i)
+                             i, mvs)
     {
     }
 
@@ -195,10 +195,13 @@ namespace stud
         }
         else if (values_ != 0) // Subsequent top-level value.
         {
-          // Top-level value separation. For now we always separate them with
-          // newlines, which is the most common/sensible way.
+          // Top-level value separation.
           //
-          sep = make_str ("\n", 1);
+          sep = make_str (
+            mv_separator_,
+            (mv_separator_ == nullptr || mv_separator_[0] == '\0' ? 0 :
+             mv_separator_[1] == '\0'                             ? 1 :
+             strlen (mv_separator_)));
         }
 
         switch (*e)

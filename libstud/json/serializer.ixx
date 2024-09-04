@@ -25,36 +25,39 @@ namespace stud
     inline buffer_serializer::
     buffer_serializer (void* b, std::size_t& s, std::size_t c,
                        overflow_function* o, flush_function* f, void* d,
-                       std::size_t i)
+                       std::size_t i, const char* mvs)
         : buf_ {b, s, c},
           overflow_ (o),
           flush_ (f),
           data_ (d),
           indent_ (i),
-          sep_ (indent_ != 0 ? ",\n" : "")
+          sep_ (indent_ != 0 ? ",\n" : ""),
+          mv_separator_ (mvs)
     {
     }
 
     template <std::size_t N>
     inline buffer_serializer::
-    buffer_serializer (std::array<char, N>& a, std::size_t& s, std::size_t i)
+    buffer_serializer (std::array<char, N>& a, std::size_t& s,
+                       std::size_t i, const char* mvs)
         : buffer_serializer (a.data (), s, a.size (),
                              nullptr, nullptr, nullptr,
-                             i)
+                             i, mvs)
     {
     }
 
     inline buffer_serializer::
-    buffer_serializer (void* b, std::size_t& s, std::size_t c, std::size_t i)
-        : buffer_serializer (b, s, c, nullptr, nullptr, nullptr, i)
+    buffer_serializer (void* b, std::size_t& s, std::size_t c,
+                       std::size_t i, const char* mvs)
+        : buffer_serializer (b, s, c, nullptr, nullptr, nullptr, i, mvs)
     {
     }
 
     inline buffer_serializer::
     buffer_serializer (void* b, std::size_t c,
                        overflow_function* o, flush_function* f, void* d,
-                       std::size_t i)
-        : buffer_serializer (b, size_, c, o, f, d, i)
+                       std::size_t i, const char* mvs)
+        : buffer_serializer (b, size_, c, o, f, d, i, mvs)
     {
       size_ = 0;
     }
