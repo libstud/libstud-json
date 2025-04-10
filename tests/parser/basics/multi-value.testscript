@@ -23,7 +23,7 @@ EOO
 : null-separators
 : Zero or more JSON whitespaces should be accepted.
 :
-{
+{{
   test.options += --multi
 
   : valid
@@ -41,12 +41,12 @@ EOO
   $* <'1@2' >'  1,  1: 1' 2>>EOE != 0
   <stdin>:1:2: error: unexpected byte '@' in value
   EOE
-}
+}}
 
 : any-whitespace
 : One or more JSON whitespaces should be accepted.
 :
-{
+{{
   test.options += --multi=
 
   : valid
@@ -71,12 +71,12 @@ EOO
   $* <'"1""2"' >'  1,  1: "1"' 2>>EOE != 0
   <stdin>:1:4: error: missing separator between JSON values
   EOE
-}
+}}
 
 : specific-separators
 : At least one of the specified separators must be present.
 :
-{
+{{
   test.options += --multi=" "
 
   : valid
@@ -100,11 +100,11 @@ EOO
   $* <'"1""2"' >'  1,  1: "1"' 2>>EOE != 0
   <stdin>:1:4: error: missing separator between JSON values
   EOE
-}
+}}
 
 : multiple-separators
 :
-{
+{{
   # Newline + space.
   #
   test.options += --multi="
@@ -135,11 +135,11 @@ EOO
   $* <'"1""2"' >'  1,  1: "1"' 2>>EOE != 0
   <stdin>:1:4: error: missing separator between JSON values
   EOE
-}
+}}
 
 : non-whitespace-separator
 :
-{
+{{
   test.options += --multi="@"
 
   : valid
@@ -161,11 +161,11 @@ EOO
   $* <'"1""2"' >'  1,  1: "1"' 2>>EOE != 0
   <stdin>:1:4: error: missing separator between JSON values
   EOE
-}
+}}
 
 : record-separator
 :
-{
+{{
   # @@ Currently it's impossible to specify RS characters in testscript so
   #    using `@` until that has been adressed.
   #
@@ -191,4 +191,4 @@ EOO
     @
 
   EOI
-}
+}}

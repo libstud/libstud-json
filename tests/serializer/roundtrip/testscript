@@ -1,6 +1,6 @@
 : simple
 :
-{
+{{
   : number
   :
   $* <<EOI >>EOI
@@ -31,11 +31,11 @@
   $* <<EOI >>EOI
   false
   EOI
-}
+}}
 
 : array
 :
-{
+{{
   : empty
   :
   $* <<EOI >>EOI
@@ -134,11 +134,11 @@
     {}
   ]
   EOI
-}
+}}
 
 : object
 :
-{
+{{
   : empty
   :
   $* <<EOI >>EOI
@@ -234,14 +234,14 @@
     "b": []
   }
   EOI
-}
+}}
 
 # Multiple levels of nesting covering all of the nesting cases: {{}}, {[]},
 # [[]], [{}].
 #
 : nested
 :
-{
+{{
   : pretty
   :
   $* --pretty <<EOI >>EOI
@@ -272,16 +272,16 @@
   $* <<EOI >>EOI
   {"a":{"b":[{"c":1,"d":2,"e":3},{},[3,4,5],[]],"f":[]},"g":{}}
   EOI
-}
+}}
 
 : multival
 :
-{
+{{
   : zero
   : Checks that no newline is printed following a complete but empty value
   : sequence, independently of whether or not pretty-printing is enabled.
   :
-  {
+  {{
     : pretty
     :
     $* --pretty <'' >:''
@@ -289,13 +289,13 @@
     : no-pretty
     :
     $* <'' >:''
-  }
+  }}
 
   : multi
   : Checks that top-level values are always separated, independently of
   : whether or not pretty-printing is enabled.
   :
-  {
+  {{
     : pretty
     :
     $* <<EOI >>EOI
@@ -314,5 +314,5 @@
     1
     2
     EOI
-  }
-}
+  }}
+}}
