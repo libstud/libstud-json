@@ -1,5 +1,6 @@
 project = # Unnamed tests subproject.
 
+using version
 using config
 using test
 using dist
