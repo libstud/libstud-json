@@ -12,7 +12,7 @@
 
 #include <libstud/json/event.hxx>
 
-#include <libstud/json/pdjson.h> // Implementation details.
+#include <libstud/json/pdjson5.h> // Implementation details.
 
 #include <libstud/json/export.hxx>
 
@@ -644,16 +644,13 @@ namespace stud
     private:
       // Functionality shared by next() and peek().
       //
-      json_type
+      pdjson_type
       next_impl ();
 
       // Translate the event produced by the most recent call to next_impl().
       //
-      // Note that the underlying parser state determines whether name or
-      // value is returned when translating JSON_STRING.
-      //
       optional<event>
-      translate (json_type) const noexcept;
+      translate (pdjson_type) const noexcept;
 
       // Cache state (name/value) produced by the most recent call to
       // next_impl().
@@ -685,10 +682,10 @@ namespace stud
       std::string value_;                      bool value_p_    = false;
       std::uint64_t line_, column_, position_; bool location_p_ = false;
 
-      optional<json_type> parsed_; // Current parsed event if any.
-      optional<json_type> peeked_; // Current peeked event if any.
+      optional<pdjson_type> parsed_; // Current parsed event if any.
+      optional<pdjson_type> peeked_; // Current peeked event if any.
 
-      ::json_stream impl_[1];
+      ::pdjson_stream impl_[1];
 
       // Cached raw value.
       //

@@ -1,4 +1,4 @@
-#define PDJSON_SYMEXPORT static // See below.
+#define LIBPDJSON5_SYMEXPORT static // See below.
 
 #include <libstud/json/parser.hxx>
 
@@ -43,7 +43,7 @@ namespace stud
     parser::
     ~parser ()
     {
-      json_close (impl_);
+      pdjson_close (impl_);
     }
 
     static int
@@ -116,8 +116,11 @@ namespace stud
           raw_s_ (nullptr),
           raw_n_ (0)
     {
-      json_open_user (impl_, &stream_get, &stream_peek, &stream_);
-      json_set_streaming (impl_, multi_value_);
+      pdjson_user_io io = {&stream_peek, &stream_get, NULL}; // @@ TODO
+      pdjson_open_user (impl_, &io, &stream_);
+
+      if (multi_value_)
+        pdjson_set_streaming (impl_, true);
     }
 
     parser::
@@ -133,8 +136,10 @@ namespace stud
           raw_s_ (nullptr),
           raw_n_ (0)
     {
-      json_open_buffer (impl_, t, s);
-      json_set_streaming (impl_, multi_value_);
+      pdjson_open_buffer (impl_, t, s);
+
+      if (multi_value_)
+        pdjson_set_streaming (impl_, true);
     }
 
     optional<event> parser::
@@ -324,8 +329,7 @@ namespace stud
 
         assert (!peeked_);
 
-        return static_cast<uint64_t> (
-            json_get_lineno (const_cast<json_stream*> (impl_)));
+        return pdjson_get_line (const_cast<pdjson_stream*> (impl_));
       }
 
       return line_;
@@ -341,8 +345,7 @@ namespace stud
 
         assert (!peeked_);
 
-        return static_cast<uint64_t> (
-            json_get_column (const_cast<json_stream*> (impl_)));
+        return pdjson_get_column (const_cast<pdjson_stream*> (impl_));
       }
 
       return column_;
@@ -358,19 +361,18 @@ namespace stud
 
         assert (!peeked_);
 
-        return static_cast<uint64_t> (
-            json_get_position (const_cast<json_stream*> (impl_)));
+        return pdjson_get_position (const_cast<pdjson_stream*> (impl_));
       }
 
       return position_;
     }
 
-    json_type parser::
+    pdjson_type parser::
     next_impl ()
     {
       raw_s_ = nullptr;
       raw_n_ = 0;
-      json_type e;
+      pdjson_type e;
 
       // Read characters between values skipping required separators and JSON
       // whitespaces. Return whether a required separator was encountered as
@@ -386,7 +388,9 @@ namespace stud
         bool r (separators_ == nullptr);
 
         int c;
-        for (; (c = json_source_peek (impl_)) != EOF; json_source_get (impl_))
+        for (;
+             (c = pdjson_source_peek (impl_)) != EOF;
+             pdjson_source_get (impl_))
         {
           // User separator.
           //
@@ -401,7 +405,7 @@ namespace stud
 
           // JSON separator.
           //
-          if (json_isspace (c))
+          if (pdjson_is_space (impl_, c))
           {
             if (separators_ != nullptr && *separators_ == '\0')
               r = true;
@@ -427,7 +431,7 @@ namespace stud
         }
       }
 
-      e = json_next (impl_);
+      e = pdjson_next (impl_);
 
       // First check for a pending input/output error.
       //
@@ -456,17 +460,17 @@ namespace stud
       //
       switch (e)
       {
-      case JSON_DONE:
+      case PDJSON_DONE:
         {
           // Deal with the following value separators.
           //
-          // Note that we must not do this for the second JSON_DONE (or the
+          // Note that we must not do this for the second PDJSON_DONE (or the
           // first one in case there are no values) that signals the end of
           // input.
           //
           if (multi_value_         &&
               (parsed_ || peeked_) &&
-              (peeked_ ? *peeked_ : *parsed_) != JSON_DONE)
+              (peeked_ ? *peeked_ : *parsed_) != PDJSON_DONE)
           {
             auto p (skip_separators ());
 
@@ -480,90 +484,60 @@ namespace stud
             //
             if (!p.first && p.second != EOF)
             {
-              json_source_get (impl_); // Consume to update column number.
+              pdjson_source_get (impl_); // Consume to update column number.
               goto fail_separation;
             }
 
-            json_reset (impl_);
+            pdjson_reset (impl_);
           }
           break;
         }
-      case JSON_ERROR: goto fail_json;
-      case JSON_STRING:
-      case JSON_NUMBER:
-        raw_s_ = json_get_string (impl_, &raw_n_);
+      case PDJSON_ERROR: goto fail_json;
+
+      case PDJSON_NAME:
+        raw_s_ = pdjson_get_name (impl_, &raw_n_);
         raw_n_--; // Includes terminating `\0`.
         break;
-      case JSON_TRUE:  raw_s_ = "true";  raw_n_ = 4; break;
-      case JSON_FALSE: raw_s_ = "false"; raw_n_ = 5; break;
-      case JSON_NULL:  raw_s_ = "null";  raw_n_ = 4; break;
+
+      case PDJSON_STRING:
+      case PDJSON_NUMBER:
+        raw_s_ = pdjson_get_value (impl_, &raw_n_);
+        raw_n_--; // Includes terminating `\0`.
+        break;
+
+      case PDJSON_TRUE:  raw_s_ = "true";  raw_n_ = 4; break;
+      case PDJSON_FALSE: raw_s_ = "false"; raw_n_ = 5; break;
+      case PDJSON_NULL:  raw_s_ = "null";  raw_n_ = 4; break;
+
       default: break;
       }
 
       return e;
 
     fail_json:
-      throw invalid_json_input (
-          input_name != nullptr ? input_name : "",
-          static_cast<uint64_t> (json_get_lineno (impl_)),
-          static_cast<uint64_t> (json_get_column (impl_)),
-          static_cast<uint64_t> (json_get_position (impl_)),
-          json_get_error (impl_));
-
+      throw invalid_json_input (input_name != nullptr ? input_name : "",
+                                pdjson_get_line (impl_),
+                                pdjson_get_column (impl_),
+                                pdjson_get_position (impl_),
+                                pdjson_get_error (impl_));
     fail_separation:
-      throw invalid_json_input (
-          input_name != nullptr ? input_name : "",
-          static_cast<uint64_t> (json_get_lineno (impl_)),
-          static_cast<uint64_t> (json_get_column (impl_)),
-          static_cast<uint64_t> (json_get_position (impl_)),
-          "missing separator between JSON values");
-
+      throw invalid_json_input (input_name != nullptr ? input_name : "",
+                                pdjson_get_line (impl_),
+                                pdjson_get_column (impl_),
+                                pdjson_get_position (impl_),
+                                "missing separator between JSON values");
     fail_stream:
-      throw invalid_json_input (
-          input_name != nullptr ? input_name : "",
-          static_cast<uint64_t> (json_get_lineno (impl_)),
-          static_cast<uint64_t> (json_get_column (impl_)),
-          static_cast<uint64_t> (json_get_position (impl_)),
-          "unable to read JSON input text");
-
+      throw invalid_json_input (input_name != nullptr ? input_name : "",
+                                pdjson_get_line (impl_),
+                                pdjson_get_column (impl_),
+                                pdjson_get_position (impl_),
+                                "unable to read JSON input text");
     fail_rethrow:
 #ifndef LIBSTUD_JSON_NO_EXCEPTION_PTR
       rethrow_exception (move (*stream_.exception));
 #else
       throw istream::failure ("unable to read");
 #endif
-    }
-
-    optional<event> parser::
-    translate (json_type e) const noexcept
-    {
-      switch (e)
-      {
-      case JSON_DONE: return nullopt;
-      case JSON_OBJECT: return event::begin_object;
-      case JSON_OBJECT_END: return event::end_object;
-      case JSON_ARRAY: return event::begin_array;
-      case JSON_ARRAY_END: return event::end_array;
-      case JSON_STRING:
-        {
-          // This can be a value or, inside an object, a name from the
-          // name/value pair.
-          //
-          size_t n;
-          return json_get_context (const_cast<json_stream*> (impl_), &n) ==
-                             JSON_OBJECT &&
-                         n % 2 == 1
-                     ? event::name
-                     : event::string;
-        }
-      case JSON_NUMBER: return event::number;
-      case JSON_TRUE: return event::boolean;
-      case JSON_FALSE: return event::boolean;
-      case JSON_NULL: return event::null;
-      case JSON_ERROR: assert (false); // Should've been handled by caller.
-      }
-
-      return nullopt; // Should never reach.
     }
 
     void parser::
@@ -588,9 +562,9 @@ namespace stud
     void parser::
     cache_parsed_location () noexcept
     {
-      line_ = static_cast<uint64_t> (json_get_lineno (impl_));
-      column_ = static_cast<uint64_t> (json_get_column (impl_));
-      position_ = static_cast<uint64_t> (json_get_position (impl_));
+      line_ = pdjson_get_line (impl_);
+      column_ = pdjson_get_column (impl_);
+      position_ = pdjson_get_position (impl_);
       location_p_ = true;
     }
 
@@ -639,7 +613,7 @@ namespace stud
 
 extern "C"
 {
-#define PDJSON_STACK_INC 16
-#define PDJSON_STACK_MAX 2048
-#include "pdjson.c"
+#define LIBPDJSON5_STACK_INC 16
+#define LIBPDJSON5_STACK_MAX 2048
+#include "pdjson5.c"
 }

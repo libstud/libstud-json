@@ -87,6 +87,28 @@ namespace stud
     {
     }
 
+    inline optional<event> parser::
+    translate (pdjson_type e) const noexcept
+    {
+      switch (e)
+      {
+      case PDJSON_DONE:       return nullopt;
+      case PDJSON_OBJECT:     return event::begin_object;
+      case PDJSON_OBJECT_END: return event::end_object;
+      case PDJSON_ARRAY:      return event::begin_array;
+      case PDJSON_ARRAY_END:  return event::end_array;
+      case PDJSON_NAME:       return event::name;
+      case PDJSON_STRING:     return event::string;
+      case PDJSON_NUMBER:     return event::number;
+      case PDJSON_TRUE:       return event::boolean;
+      case PDJSON_FALSE:      return event::boolean;
+      case PDJSON_NULL:       return event::null;
+      case PDJSON_ERROR:      assert (false); // Handled by caller.
+      }
+
+      return nullopt; // Should never reach.
+    }
+
     inline const std::string& parser::
     name ()
     {
