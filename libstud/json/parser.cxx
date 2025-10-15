@@ -329,7 +329,7 @@ namespace stud
 
         assert (!peeked_);
 
-        return pdjson_get_line (const_cast<pdjson_stream*> (impl_));
+        return pdjson_get_line (impl_);
       }
 
       return line_;
@@ -345,7 +345,7 @@ namespace stud
 
         assert (!peeked_);
 
-        return pdjson_get_column (const_cast<pdjson_stream*> (impl_));
+        return pdjson_get_column (impl_);
       }
 
       return column_;
@@ -361,7 +361,7 @@ namespace stud
 
         assert (!peeked_);
 
-        return pdjson_get_position (const_cast<pdjson_stream*> (impl_));
+        return pdjson_get_position (impl_);
       }
 
       return position_;
@@ -613,7 +613,5 @@ namespace stud
 
 extern "C"
 {
-#define LIBPDJSON5_STACK_INC 16
-#define LIBPDJSON5_STACK_MAX 2048
 #include "pdjson5.c"
 }
