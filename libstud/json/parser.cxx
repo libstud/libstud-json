@@ -375,22 +375,21 @@ namespace stud
       pdjson_type e;
 
       // Read characters between values skipping required separators and JSON
-      // whitespaces. Return whether a required separator was encountered as
-      // well as the first non-separator/whitespace character (which, if EOF,
-      // should trigger a check for input/output errors).
+      // whitespaces. Return whether a required separator was encountered
+      // (0/1) or a parser error has occured (-1) as well as the first
+      // non-separator/whitespace character (which, if EOF, should trigger a
+      // check for input/output errors).
       //
       // Note that the returned non-separator will not have been extracted
       // from the input (so position, column, etc. will still refer to its
       // predecessor).
       //
-      auto skip_separators = [this] () -> pair<bool, int>
+      auto skip_separators = [this] () -> pair<int, int>
       {
-        bool r (separators_ == nullptr);
+        int r (separators_ == nullptr ? 1 : 0);
 
         int c;
-        for (;
-             (c = pdjson_source_peek (impl_)) != EOF;
-             pdjson_source_get (impl_))
+        while ((c = pdjson_source_peek (impl_)) != EOF)
         {
           // User separator.
           //
@@ -398,19 +397,27 @@ namespace stud
           {
             if (strchr (separators_, c) != nullptr)
             {
-              r = true;
+              pdjson_source_get (impl_);
+              r = 1;
               continue;
             }
           }
 
           // JSON separator.
           //
-          if (pdjson_is_space (impl_, c))
+          switch (pdjson_skip_if_space (impl_, c, nullptr /* codepoint */))
           {
-            if (separators_ != nullptr && *separators_ == '\0')
-              r = true;
+          case 0:
+            break;
 
+          case 1:
+            if (r == 0 && *separators_ == '\0') // r == 0 ~ separators_ != NULL
+              r = 1;
             continue;
+
+          case -1:
+            r = -1;
+            break;
           }
 
           break;
@@ -424,7 +431,12 @@ namespace stud
       //
       if (multi_value_ && !parsed_ && !peeked_)
       {
-        if (skip_separators ().second == EOF && stream_.is != nullptr)
+        auto p (skip_separators ());
+
+        if (p.first == -1)
+          goto fail_json;
+
+        if (p.second == EOF && stream_.is != nullptr)
         {
           if (stream_.exception)   goto fail_rethrow;
           if (stream_.is->fail ()) goto fail_stream;
@@ -474,6 +486,9 @@ namespace stud
           {
             auto p (skip_separators ());
 
+            if (p.first == -1)
+              goto fail_json;
+
             if (p.second == EOF && stream_.is != nullptr)
             {
               if (stream_.exception)   goto fail_rethrow;
@@ -482,7 +497,7 @@ namespace stud
 
             // Note that we don't require separators after the last value.
             //
-            if (!p.first && p.second != EOF)
+            if (p.first == 0 && p.second != EOF)
             {
               pdjson_source_get (impl_); // Consume to update column number.
               goto fail_separation;

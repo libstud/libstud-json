@@ -81,13 +81,16 @@ namespace stud
       // between JSON values).
       //
       // Note that a separator need not be valid JSON whitespace: any
-      // character is acceptable (though it probably shouldn't be an object,
+      // character is acceptable, though it probably shouldn't be an object,
       // array, or string delimiter and should not occur within a non-self-
       // delimited top-level value, such as `true`, `false`, `null`, or a
-      // number). All instances of required separators before and after a
+      // number, as well as characters that start comments in JSON5 ('/') and
+      // JSON5E (`#`). All instances of required separators before and after a
       // value are skipped. Therefore JSON Text Sequences (RFC 7464; AKA
       // Record Separator-delimited JSON), which requires the RS (0x1E)
-      // character before each value, can be handled as well.
+      // character before each value, can be handled as well. Note also that
+      // required separator characters that require multi-byte UTF-8 encoding
+      // are currently not supported.
       //
       parser (std::istream&,
               const std::string& name,

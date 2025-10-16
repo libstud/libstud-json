@@ -192,3 +192,10 @@ EOO
 
   EOI
 }}
+
+: invalid-multi-byte
+: Multi-byte UTF-8 encoded codepoint between values.
+:
+$* <'1 𐀀 2' >'  1,  1: 1' 2>>EOE != 0
+<stdin>:1:3: error: unexpected Unicode character '𐀀' outside of string
+EOE
