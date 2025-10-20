@@ -56,7 +56,7 @@ namespace stud
       // up being called more than once after EOF is reached. Which is
       // something iostream does not handle gracefully.
       //
-      if (!s.is->eof ())
+      if (!s.eof)
       {
         try
         {
@@ -64,6 +64,8 @@ namespace stud
           //
           if (s.is->peek () != istream::traits_type::eof ())
             return static_cast<char> (s.is->get ());
+          else
+            s.eof = true;
         }
         catch (...)
         {
@@ -83,13 +85,15 @@ namespace stud
     {
       auto& s (*static_cast<parser::stream*> (x));
 
-      if (!s.is->eof ())
+      if (!s.eof)
       {
         try
         {
           auto c (s.is->peek ());
           if (c != istream::traits_type::eof ())
             return static_cast<char> (c);
+          else
+            s.eof = true;
         }
         catch (...)
         {
@@ -110,7 +114,7 @@ namespace stud
     parser::
     parser (istream& is, const char* n, bool mv, const char* sep) noexcept
         : input_name (n),
-          stream_ {&is, nullopt},
+          stream_ {&is, false, nullopt},
           multi_value_ (mv),
           separators_ (sep),
           raw_s_ (nullptr),
@@ -130,7 +134,7 @@ namespace stud
             bool mv,
             const char* sep) noexcept
         : input_name (n),
-          stream_ {nullptr, nullopt},
+          stream_ {nullptr, false, nullopt},
           multi_value_ (mv),
           separators_ (sep),
           raw_s_ (nullptr),

@@ -131,7 +131,7 @@ namespace stud
               bool = false,
               const char* = nullptr) = delete;
 
-      // Similar to the above but parse a string.
+      // Similar to the above but parse a std::string.
       //
       parser (const std::string& text,
               const std::string& name,
@@ -636,6 +636,7 @@ namespace stud
       struct stream
       {
         std::istream*                is;
+        bool                         eof;
         optional<std::exception_ptr> exception;
       };
 
