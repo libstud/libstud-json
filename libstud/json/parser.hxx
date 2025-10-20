@@ -44,6 +44,13 @@ namespace stud
                           const char* description);
     };
 
+    enum class language: std::uint8_t
+    {
+      json,   // Strict JSON.
+      json5,  // Strict JSON5.
+      json5e, // Extended JSON5.
+    };
+
     class LIBSTUD_JSON_SYMEXPORT parser
     {
     public:
@@ -62,6 +69,10 @@ namespace stud
       // exception is used to report input/output errors (badbit and failbit).
       // Otherwise, those are reported as the invalid_json_input exception.
       // Memory allocation failures are reported by throwing std::bad_alloc.
+      //
+      // By default the parser only accepts strict JSON but can be configured
+      // to accept JSON5 (which is a superset of JSON) or JSON5E (JSON5 with
+      // extensions).
       //
       // If multi_value is true, enable the multi-value mode in which case the
       // input stream may contain multiple JSON values (more precisely, zero
@@ -95,16 +106,19 @@ namespace stud
       //
       parser (std::istream&,
               const std::string& name,
+              language = language::json,
               bool multi_value = false,
               const char* separators = nullptr) noexcept;
 
       parser (std::istream&,
               const char* name,
+              language = language::json,
               bool multi_value = false,
               const char* separators = nullptr) noexcept;
 
       parser (std::istream&,
               std::string&&,
+              language = language::json,
               bool = false,
               const char* = nullptr) = delete;
 
@@ -114,23 +128,29 @@ namespace stud
       // that the buffer, name, and separators are kept as references so they
       // must outlive the parser instance.
       //
+      // The rest of the arguments are the same as in the stream version
+      // above.
+      //
       // Memory allocation failures are reported by throwing std::bad_alloc.
       //
       parser (const void* text,
               std::size_t size,
               const std::string& name,
+              language = language::json,
               bool multi_value = false,
               const char* separators = nullptr) noexcept;
 
       parser (const void* text,
               std::size_t size,
               const char* name,
+              language = language::json,
               bool multi_value = false,
               const char* separators = nullptr) noexcept;
 
       parser (const void*,
               std::size_t,
               std::string&&,
+              language = language::json,
               bool = false,
               const char* = nullptr) = delete;
 
@@ -138,16 +158,19 @@ namespace stud
       //
       parser (const std::string& text,
               const std::string& name,
+              language = language::json,
               bool multi_value = false,
               const char* separators = nullptr) noexcept;
 
       parser (const std::string& text,
               const char* name,
+              language = language::json,
               bool multi_value = false,
               const char* separators = nullptr) noexcept;
 
       parser (const std::string&,
               std::string&&,
+              language = language::json,
               bool = false,
               const char* = nullptr) = delete;
 
@@ -155,16 +178,19 @@ namespace stud
       //
       parser (const char* text,
               const std::string& name,
+              language = language::json,
               bool multi_value = false,
               const char* separators = nullptr) noexcept;
 
       parser (const char* text,
               const char* name,
+              language = language::json,
               bool multi_value = false,
               const char* separators = nullptr) noexcept;
 
       parser (const char*,
               std::string&&,
+              language = language::json,
               bool = false,
               const char* = nullptr) = delete;
 

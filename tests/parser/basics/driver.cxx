@@ -1,5 +1,7 @@
 // Usage: argv[0] [--multi[=<sep>]] [--peek] --fail-exc|--fail-bit|[<mode>]
 //
+// --json5       -- enable JSON5 parsing
+// --json5e      -- enable JSON5E parsing
 // --multi=<sep> -- enable multi-value mode with the specified separators
 // --peek        -- pre-peek every token before parsing (must come first)
 // --fail-exc    -- fail due to istream exception
@@ -34,16 +36,31 @@ number (const string& m, json::parser& p)
 
 int main (int argc, const char* argv[])
 {
+  using namespace json;
+
   bool multi (false);
   const char* sep (nullptr);
   bool peek (false);
   bool fail_exc (false);
   bool fail_bit (false);
+  language lang (language::json);
 
   string nm;
   for (int i (1); i < argc; ++i)
   {
     string o (argv[i]);
+
+    if (o == "--json5")
+    {
+      lang = language::json5;
+      continue;
+    }
+
+    if (o == "--json5e")
+    {
+      lang = language::json5e;
+      continue;
+    }
 
     if (o.compare (0, 7, "--multi") == 0)
     {
@@ -67,8 +84,6 @@ int main (int argc, const char* argv[])
 
   try
   {
-    using namespace json;
-
     // It's not easy to cause the stream to fail when called by the parser.
     // So we will fail on EOF as the next best thing.
     //
@@ -77,7 +92,7 @@ int main (int argc, const char* argv[])
                       istream::failbit |
                       (fail_exc ? istream::eofbit : istream::goodbit));
 
-    parser p (cin, "<stdin>", multi, sep);
+    parser p (cin, "<stdin>", lang, multi, sep);
     size_t i (0); // Indentation.
 
     cout << right << setfill (' '); // Line number formatting.

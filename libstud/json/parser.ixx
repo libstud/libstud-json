@@ -35,9 +35,10 @@ namespace stud
     inline parser::
     parser (std::istream& is,
             const std::string& n,
+            language l,
             bool mv,
             const char* sep) noexcept
-        : parser (is, n.c_str (), mv, sep)
+        : parser (is, n.c_str (), l, mv, sep)
     {
     }
 
@@ -45,45 +46,50 @@ namespace stud
     parser (const void* t,
             std::size_t s,
             const std::string& n,
+            language l,
             bool mv,
             const char* sep) noexcept
-        : parser (t, s, n.c_str (), mv, sep)
+        : parser (t, s, n.c_str (), l, mv, sep)
     {
     }
 
     inline parser::
     parser (const std::string& t,
             const std::string& n,
+            language l,
             bool mv,
             const char* sep) noexcept
-        : parser (t.data (), t.size (), n.c_str (), mv, sep)
+        : parser (t.data (), t.size (), n.c_str (), l, mv, sep)
     {
     }
 
     inline parser::
     parser (const std::string& t,
             const char* n,
+            language l,
             bool mv,
             const char* sep) noexcept
-        : parser (t.data (), t.size (), n, mv, sep)
+        : parser (t.data (), t.size (), n, l, mv, sep)
     {
     }
 
     inline parser::
     parser (const char* t,
             const std::string& n,
+            language l,
             bool mv,
             const char* sep) noexcept
-        : parser (t, std::strlen (t), n.c_str (), mv, sep)
+        : parser (t, std::strlen (t), n.c_str (), l, mv, sep)
     {
     }
 
     inline parser::
     parser (const char* t,
             const char* n,
+            language l,
             bool mv,
             const char* sep) noexcept
-        : parser (t, std::strlen (t), n, mv, sep)
+        : parser (t, std::strlen (t), n, l, mv, sep)
     {
     }
 

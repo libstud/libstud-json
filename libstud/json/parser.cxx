@@ -122,11 +122,33 @@ namespace stud
       return s.exception || s.is->fail ();
     }
 
+    static inline void
+    init (pdjson_stream* impl, language l, bool mv)
+    {
+      enum pdjson_language ul;
+      switch (l)
+      {
+      case language::json:   ul = PDJSON_LANGUAGE_JSON;   break;
+      case language::json5:  ul = PDJSON_LANGUAGE_JSON5;  break;
+      case language::json5e: ul = PDJSON_LANGUAGE_JSON5E; break;
+      }
+
+      if (ul != PDJSON_LANGUAGE_JSON)
+        pdjson_set_language (impl, ul);
+
+      if (mv)
+        pdjson_set_streaming (impl, true);
+    }
+
     // NOTE: watch out for exception safety (specifically, doing anything that
     // might throw after opening the stream).
     //
     parser::
-    parser (istream& is, const char* n, bool mv, const char* sep) noexcept
+    parser (istream& is,
+            const char* n,
+            language l,
+            bool mv,
+            const char* sep) noexcept
         : input_name (n),
           stream_ {&is, false, nullopt},
           multi_value_ (mv),
@@ -137,14 +159,14 @@ namespace stud
       pdjson_user_io io = {&stream_peek, &stream_get, &stream_error};
       pdjson_open_user (impl_, &io, &stream_);
 
-      if (multi_value_)
-        pdjson_set_streaming (impl_, true);
+      init (impl_, l, mv);
     }
 
     parser::
     parser (const void* t,
             size_t s,
             const char* n,
+            language l,
             bool mv,
             const char* sep) noexcept
         : input_name (n),
@@ -156,8 +178,7 @@ namespace stud
     {
       pdjson_open_buffer (impl_, t, s);
 
-      if (multi_value_)
-        pdjson_set_streaming (impl_, true);
+      init (impl_, l, mv);
     }
 
     optional<event> parser::

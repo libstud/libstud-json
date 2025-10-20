@@ -22,6 +22,7 @@ main (int argc, const char* argv[])
 
   bool check (false);
   bool pretty (false);
+  language lang (language::json);
 
   for (int i (1); i < argc; i++)
   {
@@ -33,7 +34,7 @@ main (int argc, const char* argv[])
       pretty = true;
   }
 
-  parser p (cin, "<stdin>", true /* multi_value*/);
+  parser p (cin, "<stdin>", lang, true /* multi_value*/);
   stream_serializer s (cout, pretty ? 2 : 0);
 
   try

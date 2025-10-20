@@ -1,0 +1,15 @@
+: basics
+:
+$* --json5 <<EOI >>EOO
+{
+  foo: 'abc',
+  bar: 0xDECAF,
+}
+EOI
+  1,  1: {
+  2,  3:   foo
+  2,  8:   "abc"
+  3,  3:   bar
+  3,  8:   0xDECAF
+  4,  1: }
+EOO
