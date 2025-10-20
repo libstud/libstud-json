@@ -128,9 +128,10 @@ namespace stud
       enum pdjson_language ul;
       switch (l)
       {
-      case language::json:   ul = PDJSON_LANGUAGE_JSON;   break;
       case language::json5:  ul = PDJSON_LANGUAGE_JSON5;  break;
       case language::json5e: ul = PDJSON_LANGUAGE_JSON5E; break;
+      case language::json:
+      default:               ul = PDJSON_LANGUAGE_JSON;   break;
       }
 
       if (ul != PDJSON_LANGUAGE_JSON)
