@@ -1,6 +1,8 @@
+test.options += --json5e
+
 : basics
 :
-$* --json5e <<EOI >>EOO
+$* <<EOI >>EOO
 # This is foo.
 #
 foo: 'abc'

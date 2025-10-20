@@ -158,7 +158,12 @@ namespace stud
     {
       char* e (nullptr);
       errno = 0; // We must clear it according to POSIX.
-      std::int64_t v (strtoll (b, &e, 10)); // Can't throw.
+
+      // Note that a valid JSON/JSON5 decimal integer cannot start with a
+      // leading `0`, which means we can make strtoll() auto-detect the base
+      // between decimal and hexadecimal.
+      //
+      std::int64_t v (strtoll (b, &e, 0 /* base */)); // Can't throw.
 
       if (e == b || e != b + n || errno == ERANGE ||
           v < std::numeric_limits<T>::min () ||
@@ -177,7 +182,12 @@ namespace stud
     {
       char* e (nullptr);
       errno = 0; // We must clear it according to POSIX.
-      std::uint64_t v (strtoull (b, &e, 10)); // Can't throw.
+
+      // Note that a valid JSON/JSON5 decimal integer cannot start with a
+      // leading `0`, which means we can make strtoull() auto-detect the base
+      // between decimal and hexadecimal.
+      //
+      std::uint64_t v (strtoull (b, &e, 0 /* base */)); // Can't throw.
 
       if (e == b || e != b + n || errno == ERANGE ||
           v > std::numeric_limits<T>::max ())

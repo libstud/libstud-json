@@ -1,6 +1,8 @@
+test.options += --json5
+
 : basics
 :
-$* --json5 <<EOI >>EOO
+$* <<EOI >>EOO
 {
   foo: 'abc',
   bar: 0xDECAF,
@@ -13,3 +15,47 @@ EOI
   3,  8:   0xDECAF
   4,  1: }
 EOO
+
+: hex
+:
+{{
+  : int
+  :
+  $* u <'0xff' >'  1,  1: 255'
+
+  : pos-int
+  :
+  $* u <'+0xff' >'  1,  1: 255'
+
+  : neg-int
+  :
+  $* i <'-0xff' >'  1,  1: -255'
+
+  : float
+  :
+  $* f <'0x0' >'  1,  1: 0'
+
+  : pos-float
+  :
+  $* f <'+0x0' >'  1,  1: 0'
+
+  : neg-float
+  :
+  $* f <'-0x0' >'  1,  1: -0'
+}}
+
+: infinity
+:
+$* f <'Infinity' >'  1,  1: inf'
+
+: nan
+:
+$* f <'NaN' >'  1,  1: nan'
+
+: leading-dot
+:
+$* f <'.0' >'  1,  1: 0'
+
+: trailing-dot
+:
+$* f <'0.' >'  1,  1: 0'
