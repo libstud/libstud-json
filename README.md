@@ -1,7 +1,7 @@
-# libstud-json - JSON parser/serializer library for C++
+# libstud-json - JSON/JSON5 parser/serializer library for C++
 
-A portable, dependency-free, MIT-licensed JSON pull-parser/push-serializer
-library for C++.
+A portable, dependency-free, MIT-licensed JSON, [JSON5][json5], and
+[JSON5E][json5e] pull-parser/push-serializer library for C++.
 
 The goal of this library is to provide a *pull*-style parser (instead of
 *push*/SAX or DOM) and *push*-style serializer with clean, modern interfaces
@@ -102,6 +102,8 @@ serializer interface details.
 See the [`NEWS`][news] file for changes and the
 [`cppget.org/libstud-json`][pkg] package page for build status.
 
+[json5]:          https://json5.org
+[json5e]:         https://github.com/boris-kolpackov/libpdjson5/blob/master/JSON5E.md
 [event.hxx]:      https://github.com/libstud/libstud-json/blob/master/libstud/json/event.hxx
 [parser.hxx]:     https://github.com/libstud/libstud-json/blob/master/libstud/json/parser.hxx
 [serializer.hxx]: https://github.com/libstud/libstud-json/blob/master/libstud/json/serializer.hxx
