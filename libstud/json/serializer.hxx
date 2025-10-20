@@ -176,6 +176,12 @@ namespace stud
                          std::size_t indentation = 2,
                          const char* multi_value_separator = "\n");
 
+      buffer_serializer (const buffer_serializer&) = delete;
+      buffer_serializer& operator= (const buffer_serializer&) = delete;
+
+      buffer_serializer (buffer_serializer&&) = delete;
+      buffer_serializer& operator= (buffer_serializer&&) = delete;
+
       // Begin/end an object.
       //
       // The member_begin_object() version is a shortcut for:
@@ -415,6 +421,10 @@ namespace stud
       // If stream exceptions are enabled then the std::ios_base::failure
       // exception is used to report input/output errors (badbit and failbit).
       // Otherwise, those are reported as the invalid_json_output exception.
+      //
+      // Note that the stream is not touched (written to, etc) in the
+      // constructor. This can be used, for example, to create an unused
+      // serializer with an unopened stream.
       //
       explicit
       stream_serializer (std::ostream&,
