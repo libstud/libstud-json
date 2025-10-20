@@ -23,6 +23,12 @@
 // Note that if/when we drop this workaround, we should also get rid of
 // optional<> in stream::exception member.
 //
+// Note also that with the switch to libpdjson5 we could let the exception
+// propagate from the io callbacks, provided pdjson5.c is compiled with
+// exceptions (which it does in our case). But before that we need to make
+// sure that throwing from extern "C" would be kosher on all the platforms we
+// care about (or we could add support to libpdjson5 to be compilable as C++).
+//
 #undef LIBSTUD_JSON_NO_EXCEPTION_PTR
 
 #if defined (__linux__) && defined(__clang__)
@@ -108,6 +114,13 @@ namespace stud
       return EOF;
     }
 
+    static bool
+    stream_error (void* x)
+    {
+      auto& s (*static_cast<parser::stream*> (x));
+      return s.exception || s.is->fail ();
+    }
+
     // NOTE: watch out for exception safety (specifically, doing anything that
     // might throw after opening the stream).
     //
@@ -120,7 +133,7 @@ namespace stud
           raw_s_ (nullptr),
           raw_n_ (0)
     {
-      pdjson_user_io io = {&stream_peek, &stream_get, NULL}; // @@ TODO
+      pdjson_user_io io = {&stream_peek, &stream_get, &stream_error};
       pdjson_open_user (impl_, &io, &stream_);
 
       if (multi_value_)
@@ -439,23 +452,9 @@ namespace stud
 
         if (p.first == -1)
           goto fail_json;
-
-        if (p.second == EOF && stream_.is != nullptr)
-        {
-          if (stream_.exception)   goto fail_rethrow;
-          if (stream_.is->fail ()) goto fail_stream;
-        }
       }
 
       e = pdjson_next (impl_);
-
-      // First check for a pending input/output error.
-      //
-      if (stream_.is != nullptr)
-      {
-        if (stream_.exception)   goto fail_rethrow;
-        if (stream_.is->fail ()) goto fail_stream;
-      }
 
       // There are two ways to view separation between two values: as following
       // the first value or as preceding the second value. And one aspect that
@@ -493,12 +492,6 @@ namespace stud
             if (p.first == -1)
               goto fail_json;
 
-            if (p.second == EOF && stream_.is != nullptr)
-            {
-              if (stream_.exception)   goto fail_rethrow;
-              if (stream_.is->fail ()) goto fail_stream;
-            }
-
             // Note that we don't require separators after the last value.
             //
             if (p.first == 0 && p.second != EOF)
@@ -534,6 +527,18 @@ namespace stud
       return e;
 
     fail_json:
+      switch ((enum pdjson_error_subtype) pdjson_get_error_subtype (impl_))
+      {
+      case PDJSON_ERROR_IO:
+        if (stream_.exception)
+          goto fail_rethrow;
+        // Fall through.
+
+      case PDJSON_ERROR_SYNTAX:
+      case PDJSON_ERROR_MEMORY:
+        break;
+      }
+
       throw invalid_json_input (input_name != nullptr ? input_name : "",
                                 pdjson_get_line (impl_),
                                 pdjson_get_column (impl_),
@@ -545,12 +550,6 @@ namespace stud
                                 pdjson_get_column (impl_),
                                 pdjson_get_position (impl_),
                                 "missing separator between JSON values");
-    fail_stream:
-      throw invalid_json_input (input_name != nullptr ? input_name : "",
-                                pdjson_get_line (impl_),
-                                pdjson_get_column (impl_),
-                                pdjson_get_position (impl_),
-                                "unable to read JSON input text");
     fail_rethrow:
 #ifndef LIBSTUD_JSON_NO_EXCEPTION_PTR
       rethrow_exception (move (*stream_.exception));
