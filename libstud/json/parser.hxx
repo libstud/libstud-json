@@ -61,6 +61,7 @@ namespace stud
       // If stream exceptions are enabled then the std::ios_base::failure
       // exception is used to report input/output errors (badbit and failbit).
       // Otherwise, those are reported as the invalid_json_input exception.
+      // Memory allocation failures are reported by throwing std::bad_alloc.
       //
       // If multi_value is true, enable the multi-value mode in which case the
       // input stream may contain multiple JSON values (more precisely, zero
@@ -112,6 +113,8 @@ namespace stud
       // The name argument is used to identify the input being parsed. Note
       // that the buffer, name, and separators are kept as references so they
       // must outlive the parser instance.
+      //
+      // Memory allocation failures are reported by throwing std::bad_alloc.
       //
       parser (const void* text,
               std::size_t size,

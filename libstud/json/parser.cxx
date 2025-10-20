@@ -2,6 +2,7 @@
 
 #include <libstud/json/parser.hxx>
 
+#include <new>     // std::bad_alloc
 #include <istream>
 
 // There is an issue (segfault) with using std::current_exception() and
@@ -529,13 +530,15 @@ namespace stud
     fail_json:
       switch ((enum pdjson_error_subtype) pdjson_get_error_subtype (impl_))
       {
+      case PDJSON_ERROR_MEMORY:
+        throw std::bad_alloc ();
+
       case PDJSON_ERROR_IO:
         if (stream_.exception)
           goto fail_rethrow;
         // Fall through.
 
       case PDJSON_ERROR_SYNTAX:
-      case PDJSON_ERROR_MEMORY:
         break;
       }
 
