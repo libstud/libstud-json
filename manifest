@@ -2,15 +2,15 @@
 name: libstud-json
 project: libstud
 version: 0.6.0-a.0.z
-summary: JSON pull-parser/push-serializer library for C++
+summary: JSON/JSON5 pull-parser/push-serializer library for C++
 license: MIT ; MIT License.
-topics: C++, JSON, parsing, serialization, streaming
+topics: C++, JSON, JSON5, parsing, serialization
 description-file: README.md
 changes-file: NEWS
 url: https://github.com/libstud/libstud-json
 email: libstud-authors@build2.org
 build-warning-email: libstud-authors@build2.org
 builds: all
-depends: * build2 >= 0.18.0-
-depends: * bpkg >= 0.18.0-
+depends: * build2 >= 0.18.0
+depends: * bpkg >= 0.18.0
 depends: libstud-optional ^1.0.0
